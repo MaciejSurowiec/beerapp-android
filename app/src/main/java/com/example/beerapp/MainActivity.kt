@@ -27,8 +27,7 @@ class MainActivity : AppCompatActivity() {
             welcomeText.text = "Witaj " + sharedPref.getString("userLogin", null)
         }
     }
-
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
