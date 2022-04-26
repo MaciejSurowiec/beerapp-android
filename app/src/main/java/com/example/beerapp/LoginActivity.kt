@@ -12,18 +12,16 @@ import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 
-class LoginActivity: AppCompatActivity() {
-    protected var conError = false
-    protected var userLogin = ""
-    var isBound = false
-    lateinit var mMessenger: Messenger
-    lateinit var httpService: Intent
-    val replyMessage = Messenger(IncomingHandler())
-    lateinit var button : Button
-    lateinit var login : EditText
-    lateinit var password : EditText
-    lateinit var spinner : ProgressBar
+class LoginActivity : AppCompatActivity() {
+    private var isBound = false
+    private val replyMessage = Messenger(IncomingHandler())
 
+    private lateinit var mMessenger: Messenger
+    private lateinit var httpService: Intent
+    private lateinit var button: Button
+    private lateinit var login: EditText
+    private lateinit var password: EditText
+    private lateinit var spinner: ProgressBar
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -32,40 +30,27 @@ class LoginActivity: AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            //mMessenger = null
             isBound = false
         }
     }
 
-    fun endLogin() {
-            val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
-            val editor = sharedPref.edit()
-
-            editor.putString("userLogin", userLogin)
-            editor.apply()
-            val resultIntent = Intent()
-            setResult(RESULT_OK, resultIntent)
-            finish()
-    }
-
     inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
-            var json = JSONObject(msg.getData().getString("json"))
-            if(!json["content"].toString().isEmpty()) {
-                var passwordDB = json["content"].toString()
+            val json = JSONObject(msg.data.getString("json") ?: "")
+            if (json["content"].toString().isNotEmpty()) {
+                val passwordDB = json["content"].toString()
 
-                if (BCrypt.checkpw(password.getText().toString(), passwordDB)) {
-                    userLogin = login.getText().toString()
-                    endLogin()
+                if (BCrypt.checkpw(password.text.toString(), passwordDB)) {
+                    endLogin(login.text.toString())
                 } else {
-                    password.setError("złe hasło")
-                    button.setEnabled(true)
-                    spinner.setVisibility(View.GONE)
+                    password.error = "Błędne hasło"
+                    button.isEnabled = true
+                    spinner.visibility = View.GONE
                 }
             } else {
-                login.setError("nie ma takiego użytkownika")
-                button.setEnabled(true)
-                spinner.setVisibility(View.GONE)
+                login.error = "Nie ma takiego użytkownika"
+                button.isEnabled = true
+                spinner.visibility = View.GONE
             }
         }
     }
@@ -74,35 +59,30 @@ class LoginActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        button = findViewById<Button>(R.id.button)
-        login = findViewById<EditText>(R.id.login)
-        password = findViewById<EditText>(R.id.password)
-        spinner = findViewById<ProgressBar>(R.id.progressBar)
+        button = findViewById(R.id.button)
+        login = findViewById(R.id.login)
+        password = findViewById(R.id.password)
+        spinner = findViewById(R.id.progressBar)
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
-        button.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                userLogin = login.getText().toString()
-                var json = JSONObject(mapOf("login" to userLogin))
+        button.setOnClickListener {
+            val json = JSONObject(mapOf("login" to login.text.toString()))
 
-                if(mMessenger != null) {
-                    button.setEnabled(false)
-                    spinner.setVisibility(View.VISIBLE)
-                    var message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN, 0)
-                    val bundle = Bundle()
+            button.isEnabled = false
+            spinner.visibility = View.VISIBLE
+            val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN, 0)
+            val bundle = Bundle()
 
-                    bundle.putString("json", json.toString())
-                    message.data = bundle
-                    message.replyTo = replyMessage
-                    try {
-                        mMessenger.send(message)
-                    } catch (e: RemoteException) {
-                        e.printStackTrace()
-                    }
-                }
+            bundle.putString("json", json.toString())
+            message.data = bundle
+            message.replyTo = replyMessage
+            try {
+                mMessenger.send(message)
+            } catch (e: RemoteException) {
+                e.printStackTrace()
             }
-        })
+        }
     }
 
     override fun onDestroy() {
@@ -110,5 +90,14 @@ class LoginActivity: AppCompatActivity() {
         if (isBound) {
             unbindService(serviceConnection)
         }
+    }
+
+    private fun endLogin(userLogin: String) {
+        val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("userLogin", userLogin)
+        editor.apply()
+        setResult(RESULT_OK, Intent())
+        finish()
     }
 }
