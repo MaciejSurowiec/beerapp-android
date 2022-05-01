@@ -12,11 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity: AppCompatActivity() {
+    private var userLogin = ""
     private var isBound = false
     private val replyMessage = Messenger(IncomingHandler())
+    private var mMessenger: Messenger? = null
 
-    private lateinit var mMessenger: Messenger
     private lateinit var httpService: Intent
     private lateinit var button: Button
     private lateinit var login: EditText
@@ -67,20 +68,23 @@ class LoginActivity : AppCompatActivity() {
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
         button.setOnClickListener {
-            val json = JSONObject(mapOf("login" to login.text.toString()))
+            if(mMessenger != null) {
+                val json = JSONObject(mapOf("login" to login.text.toString()))
 
-            button.isEnabled = false
-            spinner.visibility = View.VISIBLE
-            val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN, 0)
-            val bundle = Bundle()
+                button.isEnabled = false
+                spinner.visibility = View.VISIBLE
+                val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN_URL, 0)
+                val bundle = Bundle()
 
-            bundle.putString("json", json.toString())
-            message.data = bundle
-            message.replyTo = replyMessage
-            try {
-                mMessenger.send(message)
-            } catch (e: RemoteException) {
-                e.printStackTrace()
+                bundle.putString("json", json.toString())
+                message.data = bundle
+                message.replyTo = replyMessage
+                try {
+                    mMessenger!!.send(message)
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
+                }
+
             }
         }
     }
