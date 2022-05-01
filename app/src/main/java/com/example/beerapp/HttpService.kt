@@ -1,30 +1,42 @@
 package com.example.beerapp
 
+import android.R.attr
 import android.app.Service
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.*
 import android.util.Log
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
 
+
 class IncomingHandler(looper: Looper?) : Handler(looper!!) {
-    var urlRegister = "https://k4qauqp2v9.execute-api.us-east-1.amazonaws.com/prod/users"
+    private val baseUrl = "https://k4qauqp2v9.execute-api.us-east-1.amazonaws.com/prod"
+    private val baseUrlRegister = "$baseUrl/users"
+    private val baseUrlBeers = "$baseUrl/beers"
+
     override fun handleMessage(msg: Message) {
-        var url = ""
-        var data : JSONObject
-        var json = JSONObject(msg.getData().getString("json"))
+        var returnValue = 0
+        var json: JSONObject? = null
+        if(msg.data.containsKey("json")) {
+            json = JSONObject(msg.data.getString("json") ?: "")
+        }
 
-        when(msg.arg1){
-            R.integer.REGISTER -> {
-                url = urlRegister
-            }
-
-            R.integer.LOGIN -> {
-                url = urlRegister + "/" + json["login"] +"/login"
-            }
+        val url = when (msg.arg1) {
+            R.integer.REGISTER_URL -> baseUrlRegister
+            R.integer.LOGIN_URL -> "$baseUrlRegister/${json!!["login"]}/login"
+            R.integer.BEERLIST_URL -> "$baseUrlBeers?login=${json!!["login"]}"
+            R.integer.BEER_URL -> "$baseUrl/${json!!["id"]}"
+            R.integer.BEERIMAGEGET_URL -> "$baseUrlBeers/${json!!["beerid"]}/image/download"
+            R.integer.BEERIMAGEUPLOAD_URL -> "$baseUrlBeers/${json!!["beerid"]}/image"
+            R.integer.REVIEWPOST_URL -> "$baseUrl/reviews"
+            R.integer.JSON_URL -> json!!["url"].toString()
+            R.integer.BEERLISTWITHPARAMS_URL -> "$baseUrlBeers?queryPhrase=${json!!["queryPhrase"]}&limit=10&start=${json!!["start"]}&login=${json!!["login"]}"
+            else -> baseUrl
         }
 
         when(msg.what)
@@ -33,18 +45,18 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
 
                 val connection = URI(url).toURL().openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.setRequestProperty("Content-Type", "application/json; utf-8")
-                connection.setRequestProperty("Accept", "application/json")
-                try {
-                    data = JSONObject(connection.inputStream.bufferedReader().readText())
-                }
-                catch(e: Exception){
-                    data = JSONObject(mapOf("content" to ""))
-                }
 
+                connection.setRequestProperty("Content-Type", "image/bmp")
+                val data = try {
+                    JSONObject(connection.inputStream.bufferedReader().readText())
+                } catch (e: Exception) {
+                    JSONObject(mapOf("content" to ""))
+                }
+                Log.i("test",connection.responseCode.toString())
                 connection.disconnect()
                 val replyTo = msg.replyTo
-                val message = Message.obtain(null, 0, 0, 0)
+                val message = Message.obtain(null, msg.arg2, 0, 0)
+
                 val bundle = Bundle()
                 bundle.putString("json", data.toString())
                 message.data = bundle
@@ -76,11 +88,11 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
                 }
 
 
-                data = JSONObject(mapOf("content" to connection.getResponseCode().toString()))
+                val data = JSONObject(mapOf("content" to connection.responseCode.toString()))
 
                 connection.disconnect()
                 val replyTo = msg.replyTo
-                val message = Message.obtain(null, 0, 0, 0)//w what moge dac czy sie udalo czy nie
+                val message = Message.obtain(null, msg.arg2, 0, 0)//w what moge dac czy sie udalo czy nie
                 val bundle = Bundle()
                 bundle.putString("json", data.toString())
                 message.data = bundle
@@ -91,6 +103,34 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
                 }
             }
 
+            R.integer.PUT_HTTP -> {
+                val connection = URI(url).toURL().openConnection() as HttpURLConnection
+                connection.requestMethod = "PUT"
+                connection.doOutput = true
+                var byteArray:ByteArray
+                try {
+                    connection.outputStream.use { os ->
+                        byteArray = msg.data.get("bitmap") as ByteArray
+                        os.write(byteArray, 0, byteArray.size)
+                    }
+                } catch (e: Exception) {
+                    Log.d("err", e.toString())
+                }
+
+                val data = JSONObject(mapOf("content" to connection.responseCode.toString()))
+
+                connection.disconnect()
+                val replyTo = msg.replyTo
+                val message = Message.obtain(null, msg.arg2, 0, 0)//w what moge dac czy sie udalo czy nie
+                val bundle = Bundle()
+                bundle.putString("json", data.toString())
+                message.data = bundle
+                try {
+                    replyTo.send(message)
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
+                }
+            }
         }
     }
 }

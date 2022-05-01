@@ -48,4 +48,5 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1'
     implementation "com.google.code.gson:gson:2.7"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
+    implementation "androidx.percentlayout:percentlayout:1.0.0"
 }

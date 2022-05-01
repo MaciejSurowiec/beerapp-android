@@ -13,17 +13,15 @@ import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 
 class LoginActivity: AppCompatActivity() {
-    protected var conError = false
-    protected var userLogin = ""
-    var isBound = false
-    lateinit var mMessenger: Messenger
-    lateinit var httpService: Intent
-    val replyMessage = Messenger(IncomingHandler())
-    lateinit var button : Button
-    lateinit var login : EditText
-    lateinit var password : EditText
-    lateinit var spinner : ProgressBar
-
+    private var userLogin = ""
+    private var isBound = false
+    private val replyMessage = Messenger(IncomingHandler())
+    private var mMessenger: Messenger? = null
+    private lateinit var httpService: Intent
+    private lateinit var button: Button
+    private lateinit var login: EditText
+    private lateinit var password: EditText
+    private lateinit var spinner: ProgressBar
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -81,28 +79,25 @@ class LoginActivity: AppCompatActivity() {
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
-        button.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                userLogin = login.getText().toString()
-                var json = JSONObject(mapOf("login" to userLogin))
+        button.setOnClickListener {
+            if(mMessenger != null) {
+                val json = JSONObject(mapOf("login" to login.text.toString()))
 
-                if(mMessenger != null) {
-                    button.setEnabled(false)
-                    spinner.setVisibility(View.VISIBLE)
-                    var message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN, 0)
-                    val bundle = Bundle()
+                button.isEnabled = false
+                spinner.visibility = View.VISIBLE
+                val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.LOGIN_URL, 0)
+                val bundle = Bundle()
 
-                    bundle.putString("json", json.toString())
-                    message.data = bundle
-                    message.replyTo = replyMessage
-                    try {
-                        mMessenger.send(message)
-                    } catch (e: RemoteException) {
-                        e.printStackTrace()
-                    }
+                bundle.putString("json", json.toString())
+                message.data = bundle
+                message.replyTo = replyMessage
+                try {
+                    mMessenger!!.send(message)
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
                 }
             }
-        })
+        }
     }
 
     override fun onDestroy() {

@@ -2,7 +2,15 @@
     <string name="app_name">beerapp</string>
     <integer name="GET_HTTP">0</integer>
     <integer name="POST_HTTP">1</integer>
+    <integer name="PUT_HTTP">2</integer>
 
-    <integer name="REGISTER">0</integer>
-    <integer name="LOGIN">1</integer>
+    <integer name="REGISTER_URL">0</integer>
+    <integer name="LOGIN_URL">1</integer>
+    <integer name="BEERLIST_URL">2</integer>
+    <integer name="BEER_URL">3</integer>
+    <integer name="BEERIMAGEGET_URL">4</integer>
+    <integer name="BEERIMAGEUPLOAD_URL">5</integer>
+    <integer name="REVIEWPOST_URL">6</integer>
+    <integer name="JSON_URL">7</integer>
+    <integer name="BEERLISTWITHPARAMS_URL">8</integer>
 </resources>

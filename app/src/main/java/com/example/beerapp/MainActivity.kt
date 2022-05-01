@@ -77,6 +77,12 @@ class MainActivity : AppCompatActivity() {
         loginButton = findViewById<Button>(R.id.login)
         registerButton = findViewById<Button>(R.id.register)
 
+        if (sharedPref.contains("userLogin")) {
+            welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
+            loginButton.visibility = View.GONE
+            registerButton.visibility = View.GONE
+        }
+
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
@@ -119,15 +125,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.login -> {
-                var intent = Intent(this@MainActivity, LoginActivity::class.java)
-                startActivityForResult(intent,2137)
-                //refreshMessage()
-            }
-            R.id.register ->{
-                var intent = Intent(this@MainActivity, RegisterActivity::class.java)
-                startActivityForResult(intent,2137)
-                //refreshMessage()
+
+            R.id.beerlist -> {
+                val intent = Intent(this@MainActivity, BeerListActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout ->{
                 logout()

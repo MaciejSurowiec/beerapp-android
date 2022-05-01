@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.beerapp" >
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -11,6 +14,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Beerapp" >
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.beerapp"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+
         <service android:enabled="true"  android:name="com.example.beerapp.HttpService" android:exported="true"/>
         <activity
             android:name=".MainActivity"
@@ -35,6 +49,19 @@
             android:label="Rejestracja" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".BeerListActivity"
+            android:exported="true"
+            android:label="Lista Piw" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="image/*"/>
             </intent-filter>
         </activity>
     </application>
