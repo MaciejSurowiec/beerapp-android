@@ -1,4 +1,5 @@
 package com.example.beerapp
+
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -6,7 +7,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Messenger
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,13 +16,14 @@ import androidx.appcompat.app.AppCompatActivity
 
 
 class MainActivity : AppCompatActivity() {
-    lateinit var welcomeText: TextView
-    lateinit var sharedPref : SharedPreferences
-    lateinit var loginButton : Button
-    lateinit var registerButton : Button
-    lateinit var httpService: Intent
-    var isBound = false
-    lateinit var mMessenger: Messenger
+    private lateinit var welcomeText: TextView
+    private lateinit var sharedPref: SharedPreferences
+    private lateinit var loginButton: Button
+    private lateinit var registerButton: Button
+    private lateinit var httpService: Intent
+    private lateinit var mMessenger: Messenger
+
+    private var isBound = false
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -31,11 +32,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            //mMessenger = null
             isBound = false
         }
     }
-    fun logout() {
+
+    private fun logout() {
         val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
         val editor = sharedPref.edit()
 
@@ -45,8 +46,8 @@ class MainActivity : AppCompatActivity() {
         }
         welcomeText.text = ""
 
-        loginButton.setVisibility(View.VISIBLE)
-        registerButton.setVisibility(View.VISIBLE)
+        loginButton.visibility = View.VISIBLE
+        registerButton.visibility = View.VISIBLE
         invalidateOptionsMenu()
     }
 
@@ -61,21 +62,21 @@ class MainActivity : AppCompatActivity() {
 
     fun loginSuccess() {
         if (sharedPref.contains("userLogin")) {
-            welcomeText.text = "Witaj " + sharedPref.getString("userLogin", null)
-            loginButton.setVisibility(View.GONE)
-            registerButton.setVisibility(View.GONE)
+            welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
+            loginButton.visibility = View.GONE
+            registerButton.visibility = View.GONE
 
             invalidateOptionsMenu()
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
-        welcomeText = findViewById<TextView>(R.id.welcome)
-        loginButton = findViewById<Button>(R.id.login)
-        registerButton = findViewById<Button>(R.id.register)
+        welcomeText = findViewById(R.id.welcome)
+        loginButton = findViewById(R.id.login)
+        registerButton = findViewById(R.id.register)
 
         if (sharedPref.contains("userLogin")) {
             welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
@@ -86,19 +87,15 @@ class MainActivity : AppCompatActivity() {
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
-        loginButton.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                var intent = Intent(this@MainActivity, LoginActivity::class.java)
-                startActivityForResult(intent,2137)
-            }
-        })
+        loginButton.setOnClickListener {
+            val intent = Intent(this@MainActivity, LoginActivity::class.java)
+            startActivityForResult(intent, 2137)
+        }
 
-        registerButton.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                var intent = Intent(this@MainActivity, RegisterActivity::class.java)
-                startActivityForResult(intent,2137)
-            }
-        })
+        registerButton.setOnClickListener {
+            val intent = Intent(this@MainActivity, RegisterActivity::class.java)
+            startActivityForResult(intent, 2137)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -110,27 +107,26 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu : Menu): Boolean {
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         if (sharedPref.contains("userLogin")) {
-            var logout = menu.findItem(R.id.logout)
-            logout.setVisible(true)
-        }
-        else {
-            var logout = menu.findItem(R.id.logout)
-            logout.setVisible(false)
+            val logout = menu.findItem(R.id.logout)
+            logout.isVisible = true
+        } else {
+            val logout = menu.findItem(R.id.logout)
+            logout.isVisible = false
         }
 
-        return true;
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-
             R.id.beerlist -> {
                 val intent = Intent(this@MainActivity, BeerListActivity::class.java)
                 startActivity(intent)
+
             }
-            R.id.logout ->{
+            R.id.logout -> {
                 logout()
             }
         }

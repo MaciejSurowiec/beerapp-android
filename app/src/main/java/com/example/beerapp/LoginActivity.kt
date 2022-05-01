@@ -17,6 +17,7 @@ class LoginActivity: AppCompatActivity() {
     private var isBound = false
     private val replyMessage = Messenger(IncomingHandler())
     private var mMessenger: Messenger? = null
+
     private lateinit var httpService: Intent
     private lateinit var button: Button
     private lateinit var login: EditText
@@ -30,40 +31,27 @@ class LoginActivity: AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            //mMessenger = null
             isBound = false
         }
     }
 
-    fun endLogin() {
-            val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
-            val editor = sharedPref.edit()
-
-            editor.putString("userLogin", userLogin)
-            editor.apply()
-            val resultIntent = Intent()
-            setResult(RESULT_OK, resultIntent)
-            finish()
-    }
-
     inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
-            var json = JSONObject(msg.getData().getString("json"))
-            if(!json["content"].toString().isEmpty()) {
-                var passwordDB = json["content"].toString()
+            val json = JSONObject(msg.data.getString("json") ?: "")
+            if (json["content"].toString().isNotEmpty()) {
+                val passwordDB = json["content"].toString()
 
-                if (BCrypt.checkpw(password.getText().toString(), passwordDB)) {
-                    userLogin = login.getText().toString()
-                    endLogin()
+                if (BCrypt.checkpw(password.text.toString(), passwordDB)) {
+                    endLogin(login.text.toString())
                 } else {
-                    password.setError("złe hasło")
-                    button.setEnabled(true)
-                    spinner.setVisibility(View.GONE)
+                    password.error = "Błędne hasło"
+                    button.isEnabled = true
+                    spinner.visibility = View.GONE
                 }
             } else {
-                login.setError("nie ma takiego użytkownika")
-                button.setEnabled(true)
-                spinner.setVisibility(View.GONE)
+                login.error = "Nie ma takiego użytkownika"
+                button.isEnabled = true
+                spinner.visibility = View.GONE
             }
         }
     }
@@ -72,10 +60,10 @@ class LoginActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        button = findViewById<Button>(R.id.button)
-        login = findViewById<EditText>(R.id.login)
-        password = findViewById<EditText>(R.id.password)
-        spinner = findViewById<ProgressBar>(R.id.progressBar)
+        button = findViewById(R.id.button)
+        login = findViewById(R.id.login)
+        password = findViewById(R.id.password)
+        spinner = findViewById(R.id.progressBar)
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
@@ -96,6 +84,7 @@ class LoginActivity: AppCompatActivity() {
                 } catch (e: RemoteException) {
                     e.printStackTrace()
                 }
+
             }
         }
     }
@@ -105,5 +94,14 @@ class LoginActivity: AppCompatActivity() {
         if (isBound) {
             unbindService(serviceConnection)
         }
+    }
+
+    private fun endLogin(userLogin: String) {
+        val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("userLogin", userLogin)
+        editor.apply()
+        setResult(RESULT_OK, Intent())
+        finish()
     }
 }

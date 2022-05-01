@@ -32,12 +32,11 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            //mMessenger = null
             isBound = false
         }
     }
 
-    protected fun endRegistration() {
+    private fun endRegistration() {
         val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
         val editor = sharedPref.edit()
 
@@ -50,13 +49,13 @@ class RegisterActivity : AppCompatActivity() {
 
     inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
-            var json = JSONObject(msg.getData().getString("json"))
-            if(json["content"] == "204") {
+            val json = JSONObject(msg.data.getString("json") ?: "")
+            if (json["content"] == "204") {
                 endRegistration()
             } else {
-                login.setError("ten login jest już zajęty")
-                button.setEnabled(true)
-                spinner.setVisibility(View.GONE)
+                login.error = "Ten login jest już zajęty"
+                button.isEnabled = true
+                spinner.visibility = View.GONE
             }
         }
     }
@@ -65,17 +64,18 @@ class RegisterActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        button = findViewById<Button>(R.id.button)
+        button = findViewById(R.id.button)
         login = findViewById<EditText>(R.id.login)
-        var email = findViewById<EditText>(R.id.email)
-        var password = findViewById<EditText>(R.id.password)
-        var password2 = findViewById<EditText>(R.id.password2)
-        spinner = findViewById<ProgressBar>(R.id.progressBar)
+        val email = findViewById<EditText>(R.id.email)
+        val password = findViewById<EditText>(R.id.password)
+        val password2 = findViewById<EditText>(R.id.password2)
+        spinner = findViewById(R.id.progressBar)
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
         spinner.visibility = View.GONE
         button.setOnClickListener {
+
             if (mMessenger != null) {
                 val emailString = email.text.toString()
                 userLogin = login.text.toString()
@@ -91,13 +91,17 @@ class RegisterActivity : AppCompatActivity() {
                         }
                     }
                 }
+            }
 
                 if (!emailString.isEmpty()) {
                     if (!Patterns.EMAIL_ADDRESS.matcher(emailString).matches()) {
                         email.error = "To nie jest mail"
                         return@setOnClickListener
                     }
+
                 }
+            }
+
 
                 if (emailString.isEmpty() ||
                     password.text.toString().isEmpty() ||
