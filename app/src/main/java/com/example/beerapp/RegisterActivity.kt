@@ -91,7 +91,7 @@ class RegisterActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }
+
 
                 if (!emailString.isEmpty()) {
                     if (!Patterns.EMAIL_ADDRESS.matcher(emailString).matches()) {
@@ -100,8 +100,6 @@ class RegisterActivity : AppCompatActivity() {
                     }
 
                 }
-            }
-
 
                 if (emailString.isEmpty() ||
                     password.text.toString().isEmpty() ||
@@ -139,7 +137,8 @@ class RegisterActivity : AppCompatActivity() {
                 }
             }
         }
-    }
+        }
+
 
     override fun onDestroy() {
         super.onDestroy()
