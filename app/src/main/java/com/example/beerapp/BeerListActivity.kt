@@ -15,6 +15,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,7 +32,10 @@ class BeerListActivity: AppCompatActivity() {
     private lateinit var photoURI: Uri
     private lateinit var userLogin: String
     var actualstart: Int = 0
+    private var scroll: BetterScrollView? = null
     private var query: String = ""
+    private var uploadText: TextView? = null
+    private var uploadSpinner: ProgressBar? = null
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -79,9 +83,10 @@ class BeerListActivity: AppCompatActivity() {
                  0 -> {
                      val reply = JSONObject(msg.data.getString("json") ?: "")
                      if (reply.has("content")) {
+                         val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
+                         mainLayout.removeAllViews()
                          val data = reply.getJSONArray("content")
                          val inflater = getLayoutInflater()
-                         val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
 
                          for (i in 0 until data.length()) {
                              val beer = data.getJSONObject(i)
@@ -92,7 +97,7 @@ class BeerListActivity: AppCompatActivity() {
                              mainLayout.addView(view.mView)
                          }
                      }
-
+                     scroll?.loading = false
                      spinner.visibility=View.GONE
                  }
                 1 -> {
@@ -120,6 +125,8 @@ class BeerListActivity: AppCompatActivity() {
 
                 3 -> {
                     Toast.makeText(applicationContext, "zdjęcie wysłane", Toast.LENGTH_LONG).show()
+                    uploadText?.visibility=View.GONE
+                    uploadSpinner?.visibility=View.GONE
                 }
             }
         }
@@ -144,18 +151,19 @@ class BeerListActivity: AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 123) {
             if (resultCode == RESULT_OK) {
-                val message = Message.obtain(null, R.integer.PUT_HTTP, R.integer.JSON_URL, 3)
-                message.replyTo = replyMessage
-                //val bitmap = data?.extras?.get("data") as Bitmap
-                val bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoURI)
                 val bundle = Bundle()
+                bundle.putParcelable("replyTo", replyMessage)
+                val bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoURI)
                 val json = JSONObject(mapOf("url" to url))
                 bundle.putString("json", json.toString())
                 val stream = ByteArrayOutputStream()
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
                 bundle.putByteArray("bitmap",stream.toByteArray())
-                message.data = bundle
-                mMessenger!!.send(message)
+                uploadText?.visibility=View.VISIBLE
+                uploadSpinner?.visibility=View.VISIBLE
+                val photoService = Intent(this@BeerListActivity, PhotoService::class.java)
+                photoService.putExtra("data", bundle)
+                startService(photoService)
             }
         }
     }
@@ -186,28 +194,22 @@ class BeerListActivity: AppCompatActivity() {
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
         val search = findViewById<SearchView>(R.id.searchbar)
-        val scroll = findViewById<BetterScrollView>(R.id.scrollable)
-        scroll.beerList = this
+        scroll = findViewById<BetterScrollView>(R.id.scrollable)
+        scroll?.beerList = this
+        uploadText = findViewById<TextView>(R.id.uploadText)
+        uploadSpinner = findViewById<ProgressBar>(R.id.uploadProgress)
         search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
-                if(newText.length > 3) {
+                if(newText.length >= 3) {
                     actualstart = 0
-                    val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
-                    val message = Message.obtain(
-                        null,
-                        R.integer.GET_HTTP,
-                        R.integer.BEERLISTWITHPARAMS_URL,
-                        0
-                    )
+                    val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
                     message.replyTo = replyMessage
                     val bundle = Bundle()
-                    query = newText
+                    query = newText.replace(" ","%20")
                     val json = JSONObject(mapOf("queryPhrase" to query,"login" to userLogin,"start" to actualstart))
-
                     bundle.putString("json", json.toString())
                     message.data = bundle
                     spinner.visibility = View.VISIBLE
-                    mainLayout.removeAllViews()
                     mMessenger!!.send(message)
                 }
                 return false
@@ -215,15 +217,14 @@ class BeerListActivity: AppCompatActivity() {
 
             override fun onQueryTextSubmit(query: String): Boolean {
                 actualstart = 0
-                val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
                 val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
                 message.replyTo = replyMessage
                 val bundle = Bundle()
-                val json = JSONObject(mapOf("queryPhrase" to query,"login" to userLogin,"start" to actualstart))
+                val json = JSONObject(mapOf("queryPhrase" to query.replace(" ","%20"),"login" to userLogin,"start" to actualstart))
                 bundle.putString("json", json.toString())
                 message.data = bundle
                 spinner.visibility=View.VISIBLE
-                mainLayout.removeAllViews()
+
                 mMessenger!!.send(message)
                 return false
             }

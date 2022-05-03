@@ -22,7 +22,7 @@ class BeerElementView {
 
     lateinit var mView: View
     var mycontext: Context? = null
-
+    var rated: Boolean = false;
     constructor(inflater: LayoutInflater,beer: JSONObject,messenger: Messenger,
                 user: String, reply: Messenger, spinner: ProgressBar) {
 
@@ -44,6 +44,10 @@ class BeerElementView {
         abv.text = beer["abv"].toString()
         ibu.text = beer["ibu"].toString()
 
+        if(beer["review"].toString() != "null"){
+            rating.rating = beer["review"].toString().toFloat()
+            rated = true
+        }
         if(rating.rating == 0.0f) {
             rateButton.setEnabled(false)
         }
@@ -78,7 +82,12 @@ class BeerElementView {
         }
 
         cameraButton.setOnClickListener{
-            val message = Message.obtain(null, com.example.beerapp.R.integer.GET_HTTP, com.example.beerapp.R.integer.BEERIMAGEUPLOAD_URL, 2)
+            var message: Message? = null
+            if(rated) {
+                message = Message.obtain(null, com.example.beerapp.R.integer.PUT_HTTP, com.example.beerapp.R.integer.BEERIMAGEUPLOAD_URL, 2)
+            } else {
+                message = Message.obtain(null, com.example.beerapp.R.integer.GET_HTTP, com.example.beerapp.R.integer.BEERIMAGEUPLOAD_URL, 2)
+            }
             message.replyTo = reply
             val bundle = Bundle()
             val json = JSONObject(mapOf("beerid" to beer["beerId"].toString()))

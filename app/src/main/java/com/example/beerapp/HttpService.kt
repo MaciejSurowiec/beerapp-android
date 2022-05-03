@@ -58,7 +58,6 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
                 val replyTo = msg.replyTo
                 val message = Message.obtain(null, msg.arg2, 0, 0)
 
-
                 val bundle = Bundle()
                 bundle.putString("json", data.toString())
                 message.data = bundle
@@ -104,16 +103,19 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
             R.integer.PUT_HTTP -> {
                 val connection = URI(url).toURL().openConnection() as HttpURLConnection
                 connection.requestMethod = "PUT"
+                connection.setRequestProperty("Content-Type", "application/json; utf-8")
+                connection.setRequestProperty("Accept", "application/json")
                 connection.doOutput = true
-                var byteArray:ByteArray
+
                 try {
                     connection.outputStream.use { os ->
-                        byteArray = msg.data.get("bitmap") as ByteArray
-                        os.write(byteArray, 0, byteArray.size)
+                        val input: ByteArray = json.toString().toByteArray()
+                        os.write(input, 0, input.size)
                     }
                 } catch (e: Exception) {
                     Log.d("err", e.toString())
                 }
+
 
                 val data = JSONObject(mapOf("content" to connection.responseCode.toString()))
 

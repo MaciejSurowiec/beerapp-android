@@ -25,7 +25,8 @@
                 android:resource="@xml/file_paths"/>
         </provider>
 
-        <service android:enabled="true"  android:name="com.example.beerapp.HttpService" android:exported="true"/>
+        <service android:enabled="true" android:name="com.example.beerapp.HttpService" android:exported="true"/>
+        <service android:enabled="true" android:name="com.example.beerapp.PhotoService" android:exported="true"/>
         <activity
             android:name=".MainActivity"
             android:exported="true" >
