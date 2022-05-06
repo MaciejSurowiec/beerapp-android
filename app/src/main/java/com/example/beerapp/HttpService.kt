@@ -37,7 +37,8 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
             R.integer.REVIEWPOST_URL -> "$baseUrl/reviews"
             R.integer.JSON_URL -> json!!["url"].toString()
             R.integer.BEERLISTWITHPARAMS_URL -> "$baseUrlBeers?queryPhrase=${json!!["queryPhrase"]}&limit=10&start=${json!!["start"]}&login=${json!!["login"]}"
-
+            R.integer.REVIEWPUT_URL -> "$baseUrl/reviews/${json!!["login"]}/${json!!["beer_id"]}"
+            R.integer.REVIEWNUMBER_URL -> "$baseUrl/reviews/${json!!["login"]}/number"
             else -> baseUrl
         }
 
@@ -71,7 +72,7 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
             R.integer.POST_HTTP -> {
                 val connection = URI(url).toURL().openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json; utf-8")
+                connection.setRequestProperty("Content-Type", "application/json")
                 connection.setRequestProperty("Accept", "application/json")
                 connection.doOutput = true
 
@@ -103,19 +104,18 @@ class IncomingHandler(looper: Looper?) : Handler(looper!!) {
             R.integer.PUT_HTTP -> {
                 val connection = URI(url).toURL().openConnection() as HttpURLConnection
                 connection.requestMethod = "PUT"
-                connection.setRequestProperty("Content-Type", "application/json; utf-8")
+                connection.setRequestProperty("Content-Type", "application/json")
                 connection.setRequestProperty("Accept", "application/json")
                 connection.doOutput = true
-
+                var stars = json!!["stars"].toString().toInt()
                 try {
                     connection.outputStream.use { os ->
-                        val input: ByteArray = json.toString().toByteArray()
+                        val input: ByteArray = stars.toString().toByteArray()
                         os.write(input, 0, input.size)
                     }
                 } catch (e: Exception) {
                     Log.d("err", e.toString())
                 }
-
 
                 val data = JSONObject(mapOf("content" to connection.responseCode.toString()))
 

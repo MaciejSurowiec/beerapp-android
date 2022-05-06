@@ -26,9 +26,9 @@
         </provider>
 
         <service android:enabled="true" android:name="com.example.beerapp.HttpService" android:exported="true"/>
-        <service android:enabled="true" android:name="com.example.beerapp.PhotoService" android:exported="true"/>
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,12 +39,14 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="Logowanie" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
             </intent-filter>
         </activity>
         <activity
+            android:screenOrientation="portrait"
             android:name=".RegisterActivity"
             android:exported="true"
             android:label="Rejestracja" >
@@ -55,6 +57,7 @@
         <activity
             android:name=".BeerListActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="Lista Piw" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

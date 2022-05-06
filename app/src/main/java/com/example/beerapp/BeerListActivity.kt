@@ -7,15 +7,22 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import okhttp3.Dispatcher
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-import java.io.Serializable
+import java.net.HttpURLConnection
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,7 +43,8 @@ class BeerListActivity: AppCompatActivity() {
     private var query: String = ""
     private var uploadText: TextView? = null
     private var uploadSpinner: ProgressBar? = null
-
+    private var loading: Boolean = false
+    private var jsonDelayed: JSONObject? = null
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             isBound = true
@@ -48,25 +56,7 @@ class BeerListActivity: AppCompatActivity() {
             isBound = false
         }
     }
-/*
-    var resultLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val message = Message.obtain(null, R.integer.PUT_HTTP, R.integer.JSON_URL, 3)
-            message.replyTo = replyMessage
-            val bitmap = result.data?.extras?.get("data") as Bitmap
 
-            val bundle = Bundle()
-            val json = JSONObject(mapOf("url" to url))
-            bundle.putString("json", json.toString())
-            val stream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-            bundle.putByteArray("bitmap",stream.toByteArray())
-            message.data = bundle
-            mMessenger!!.send(message)
-        }
-    }
-*/
     private fun viewList(){
         val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLIST_URL, 0)
         message.replyTo = replyMessage
@@ -79,33 +69,58 @@ class BeerListActivity: AppCompatActivity() {
 
     inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
-            when(msg.what) {
-                 0 -> {
-                     val reply = JSONObject(msg.data.getString("json") ?: "")
-                     if (reply.has("content")) {
-                         val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
-                         mainLayout.removeAllViews()
-                         val data = reply.getJSONArray("content")
-                         val inflater = getLayoutInflater()
+            when (msg.what) {
+                0 -> {
+                    val reply = JSONObject(msg.data.getString("json") ?: "")
+                    if (reply.has("content")) {
+                        val data = reply.getJSONArray("content")
+                        val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
+                        mainLayout.removeAllViews()
+                        if (loading) {
+                            if (jsonDelayed != null) {
+                                Log.i("test", "1")
+                                mainLayout.removeAllViews()
+                                val message = Message.obtain(
+                                    null,
+                                    R.integer.GET_HTTP,
+                                    R.integer.BEERLISTWITHPARAMS_URL,
+                                    0
+                                )
+                                message.replyTo = replyMessage
+                                val bundle = Bundle()
+                                bundle.putString("json", jsonDelayed.toString())
+                                message.data = bundle
+                                mMessenger!!.send(message)
+                                jsonDelayed = null
+                                loading = false
+                            } else {
+                                loading = false
+                                spinner.visibility = View.GONE
+                            }
+                        } else {
+                            spinner.visibility = View.GONE
+                        }
+                        if(data.length() != 0) {
+                            for (i in 0 until data.length()) {
+                                val beer = data.getJSONObject(i)
+                                val view = BeerElementView(
+                                    getLayoutInflater(), beer, mMessenger!!,
+                                    userLogin, replyMessage, spinner
+                                )
+                                mainLayout.addView(view.mView)
+                            }
+                        } else {
+                            Toast.makeText(applicationContext, "Brak wyników", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
 
-                         for (i in 0 until data.length()) {
-                             val beer = data.getJSONObject(i)
-                             val view =
-                                 BeerElementView(inflater, beer, mMessenger!!,
-                                     userLogin, replyMessage, spinner)
-
-                             mainLayout.addView(view.mView)
-                         }
-                     }
-                     scroll?.loading = false
-                     spinner.visibility=View.GONE
-                 }
                 1 -> {
                     spinner.visibility = View.GONE
                     Toast.makeText(applicationContext, "ocena wysłana", Toast.LENGTH_LONG).show()
                 }
 
-                2->{
+                2 -> {
                     val reply = JSONObject(msg.data.getString("json") ?: "")
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
@@ -116,20 +131,79 @@ class BeerListActivity: AppCompatActivity() {
                     }
                     url = reply["content"].toString()
                     if (photoFile != null) {
-                        photoURI = FileProvider.getUriForFile(context, "com.example.beerapp", photoFile)
+                        photoURI =
+                            FileProvider.getUriForFile(context, "com.example.beerapp", photoFile)
 
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                        startActivityForResult(cameraIntent,123)
+                        startActivityForResult(cameraIntent, 123)
                     }
                 }
 
                 3 -> {
-                    Toast.makeText(applicationContext, "zdjęcie wysłane", Toast.LENGTH_LONG).show()
-                    uploadText?.visibility=View.GONE
-                    uploadSpinner?.visibility=View.GONE
+                    val reply = JSONObject(msg.data.getString("json") ?: "")
+                    if (reply.has("content")) {
+                        val data = reply.getJSONArray("content")
+                        val mainLayout = findViewById<LinearLayout>(R.id.beerlist_layout)
+                        spinner.visibility = View.GONE
+                        if(data.length() != 0) {
+                            for (i in 0 until data.length()) {
+                                val beer = data.getJSONObject(i)
+                                val view = BeerElementView(
+                                    getLayoutInflater(), beer, mMessenger!!,
+                                    userLogin, replyMessage, spinner
+                                )
+                                mainLayout.addView(view.mView)
+                            }
+                        } else {
+                            Toast.makeText(applicationContext, "Koniec danych", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    scroll?.loading = false
                 }
             }
         }
+    }
+
+   suspend fun photoLoaded(){
+       withContext(Main) {
+           uploadText?.visibility = View.GONE
+           uploadSpinner?.visibility = View.GONE
+       }
+   }
+
+   suspend fun uploadPhoto(json: JSONObject, byteArray: ByteArray){
+        val url = json["url"].toString()
+
+        val connection = URI(url).toURL().openConnection() as HttpURLConnection
+        connection.requestMethod = "PUT"
+       // connection.setRequestProperty("Content-Type", "image/jpeg")
+        connection.doOutput = true
+        try {
+            connection.outputStream.use { os ->
+                os.write(byteArray, 0, byteArray.size)
+            }
+        } catch (e: Exception) {
+            Log.d("err", e.toString())
+        }
+        val bundle = Bundle()
+
+        try {
+            val output = JSONObject(mapOf("content" to connection.responseCode.toString()))
+            bundle.putString("json", output.toString())
+        } catch (e: Exception) {
+            Log.d("err", e.toString())
+        }
+        connection.disconnect()
+        val message = Message.obtain(null, 3, 0, 0)
+
+        message.data = bundle
+        try {
+            mMessenger?.send(message)
+        } catch (e: RemoteException) {
+            e.printStackTrace()
+        }
+
+        photoLoaded()
     }
 
     @Throws(IOException::class)
@@ -151,19 +225,16 @@ class BeerListActivity: AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 123) {
             if (resultCode == RESULT_OK) {
-                val bundle = Bundle()
-                bundle.putParcelable("replyTo", replyMessage)
                 val bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoURI)
                 val json = JSONObject(mapOf("url" to url))
-                bundle.putString("json", json.toString())
                 val stream = ByteArrayOutputStream()
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                bundle.putByteArray("bitmap",stream.toByteArray())
                 uploadText?.visibility=View.VISIBLE
                 uploadSpinner?.visibility=View.VISIBLE
-                val photoService = Intent(this@BeerListActivity, PhotoService::class.java)
-                photoService.putExtra("data", bundle)
-                startService(photoService)
+
+                CoroutineScope(IO).launch {
+                    uploadPhoto(json, stream.toByteArray())
+                }
             }
         }
     }
@@ -173,11 +244,10 @@ class BeerListActivity: AppCompatActivity() {
             null,
             R.integer.GET_HTTP,
             R.integer.BEERLISTWITHPARAMS_URL,
-            0 )
+            3 )
         message.replyTo = replyMessage
         val bundle = Bundle()
         val json = JSONObject(mapOf("queryPhrase" to query,"login" to userLogin,"start" to actualstart))
-
         bundle.putString("json", json.toString())
         message.data = bundle
         spinner.visibility = View.VISIBLE
@@ -202,30 +272,45 @@ class BeerListActivity: AppCompatActivity() {
             override fun onQueryTextChange(newText: String): Boolean {
                 if(newText.length >= 3) {
                     actualstart = 0
-                    val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
-                    message.replyTo = replyMessage
-                    val bundle = Bundle()
                     query = newText.replace(" ","%20")
                     val json = JSONObject(mapOf("queryPhrase" to query,"login" to userLogin,"start" to actualstart))
-                    bundle.putString("json", json.toString())
-                    message.data = bundle
+
                     spinner.visibility = View.VISIBLE
-                    mMessenger!!.send(message)
+                    if(!loading) {
+                        val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
+                        message.replyTo = replyMessage
+                        val bundle = Bundle()
+                        bundle.putString("json", json.toString())
+                        message.data = bundle
+                        mMessenger!!.send(message)
+                    } else {
+                        jsonDelayed = json
+                    }
+
+                    findViewById<LinearLayout>(R.id.beerlist_layout).removeAllViews()
+                    loading = true
                 }
                 return false
             }
 
-            override fun onQueryTextSubmit(query: String): Boolean {
+            override fun onQueryTextSubmit(querys: String): Boolean {
                 actualstart = 0
-                val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
-                message.replyTo = replyMessage
-                val bundle = Bundle()
-                val json = JSONObject(mapOf("queryPhrase" to query.replace(" ","%20"),"login" to userLogin,"start" to actualstart))
-                bundle.putString("json", json.toString())
-                message.data = bundle
+                query = querys.replace(" ","%20")
+                val json = JSONObject(mapOf("queryPhrase" to query,"login" to userLogin,"start" to actualstart))
                 spinner.visibility=View.VISIBLE
 
-                mMessenger!!.send(message)
+                if(!loading) {
+                    val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.BEERLISTWITHPARAMS_URL, 0)
+                    message.replyTo = replyMessage
+                    val bundle = Bundle()
+                    bundle.putString("json", json.toString())
+                    message.data = bundle
+                    mMessenger!!.send(message)
+                } else {
+                    jsonDelayed = json
+                }
+
+                loading = true
                 return false
             }
         })
