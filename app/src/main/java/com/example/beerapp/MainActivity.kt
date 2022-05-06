@@ -4,15 +4,16 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.SharedPreferences
-import android.os.Bundle
-import android.os.IBinder
-import android.os.Messenger
+import android.os.*
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
+import org.mindrot.jbcrypt.BCrypt
 
 
 class MainActivity : AppCompatActivity() {
@@ -21,18 +22,41 @@ class MainActivity : AppCompatActivity() {
     private lateinit var loginButton: Button
     private lateinit var registerButton: Button
     private lateinit var httpService: Intent
-    private lateinit var mMessenger: Messenger
+    private var mMessenger: Messenger? = null
 
+    private val replyMessage = Messenger(IncomingHandler())
     private var isBound = false
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             isBound = true
             mMessenger = Messenger(service)
+
+            if (sharedPref.contains("userLogin")) {
+                welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
+                loginButton.visibility = View.GONE
+                registerButton.visibility = View.GONE
+
+                val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.REVIEWNUMBER_URL, 0)
+                message.replyTo = replyMessage
+                val bundle = Bundle()
+                val json = JSONObject(mapOf("login" to sharedPref.getString("userLogin",null)))
+                bundle.putString("json", json.toString())
+                message.data = bundle
+
+                mMessenger!!.send(message)
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
             isBound = false
+        }
+    }
+
+    inner class IncomingHandler : Handler() {
+        override fun handleMessage(msg: Message) {
+            val json = JSONObject(msg.data.getString("json") ?: "")
+            findViewById<TextView>(R.id.reviewNumber).text = "Ocenione piwa: ${json["content"].toString()}"
         }
     }
 
@@ -45,7 +69,7 @@ class MainActivity : AppCompatActivity() {
             editor.apply()
         }
         welcomeText.text = ""
-
+        findViewById<TextView>(R.id.reviewNumber).text = ""
         loginButton.visibility = View.VISIBLE
         registerButton.visibility = View.VISIBLE
         invalidateOptionsMenu()
@@ -57,6 +81,18 @@ class MainActivity : AppCompatActivity() {
             if (resultCode == RESULT_OK) {
                 loginSuccess()
             }
+            else{
+                if (sharedPref.contains("userLogin")) {
+                    val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.REVIEWNUMBER_URL, 0)
+                    message.replyTo = replyMessage
+                    val bundle = Bundle()
+                    val json = JSONObject(mapOf("login" to sharedPref.getString("userLogin",null)))
+                    bundle.putString("json", json.toString())
+                    message.data = bundle
+
+                    mMessenger!!.send(message)
+                }
+            }
         }
     }
 
@@ -65,6 +101,15 @@ class MainActivity : AppCompatActivity() {
             welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
             loginButton.visibility = View.GONE
             registerButton.visibility = View.GONE
+
+            val message = Message.obtain(null, R.integer.GET_HTTP, R.integer.REVIEWNUMBER_URL, 0)
+            message.replyTo = replyMessage
+            val bundle = Bundle()
+            val json = JSONObject(mapOf("login" to sharedPref.getString("userLogin",null)))
+            bundle.putString("json", json.toString())
+            message.data = bundle
+
+            mMessenger!!.send(message)
 
             invalidateOptionsMenu()
         }
@@ -77,13 +122,6 @@ class MainActivity : AppCompatActivity() {
         welcomeText = findViewById(R.id.welcome)
         loginButton = findViewById(R.id.login)
         registerButton = findViewById(R.id.register)
-
-        if (sharedPref.contains("userLogin")) {
-            welcomeText.text = "Witaj ${sharedPref.getString("userLogin", null)}"
-            loginButton.visibility = View.GONE
-            registerButton.visibility = View.GONE
-        }
-
         httpService = Intent(this, HttpService::class.java)
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
 
@@ -123,8 +161,7 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.beerlist -> {
                 val intent = Intent(this@MainActivity, BeerListActivity::class.java)
-                startActivity(intent)
-
+                startActivityForResult(intent,2137)
             }
             R.id.logout -> {
                 logout()

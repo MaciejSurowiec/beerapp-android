@@ -69,6 +69,11 @@ class LoginActivity: AppCompatActivity() {
 
         button.setOnClickListener {
             if(mMessenger != null) {
+                if(userLogin.contains(" ")){
+                    login.error = "login nie może zawierać spacji"
+                    return@setOnClickListener
+                }
+
                 val json = JSONObject(mapOf("login" to login.text.toString()))
 
                 button.isEnabled = false

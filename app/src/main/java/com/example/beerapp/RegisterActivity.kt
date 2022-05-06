@@ -80,6 +80,11 @@ class RegisterActivity : AppCompatActivity() {
                 val emailString = email.text.toString()
                 userLogin = login.text.toString()
 
+                if(userLogin.contains(" ")){
+                    login.error = "login nie może zawierać spacji"
+                    return@setOnClickListener
+                }
+
                 if (password.text.toString().isNotEmpty()) {
                     if (!passwordPattern.matches(password.text.toString())) {
                         password.error = "Podane hasło jest zbyt słabe"
@@ -106,9 +111,7 @@ class RegisterActivity : AppCompatActivity() {
                     password2.text.toString().isEmpty() ||
                     userLogin.isEmpty()
                 ) {
-                    val toast =
-                        Toast.makeText(applicationContext, "brakuje danych", Toast.LENGTH_LONG)
-                    toast.show()
+                    Toast.makeText(applicationContext, "brakuje danych", Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 

@@ -13,4 +13,6 @@
     <integer name="REVIEWPOST_URL">6</integer>
     <integer name="JSON_URL">7</integer>
     <integer name="BEERLISTWITHPARAMS_URL">8</integer>
+    <integer name="REVIEWPUT_URL">9</integer>
+    <integer name="REVIEWNUMBER_URL">10</integer>
 </resources>
