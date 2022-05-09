@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RegisterFragment"
+    android:padding="10sp">
+
+    <EditText
+        android:id="@+id/login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:hint="Login"
+        android:inputType="text"
+        android:textSize="20sp"
+        android:layout_gravity="center_horizontal"
+        android:textColor="?android:textColorPrimary"/>
+
+    <EditText
+        android:id="@+id/email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="150dp"
+        android:layout_gravity="center_horizontal"
+        android:hint="email"
+        android:inputType="textEmailAddress"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_marginTop="250dp"
+        android:layout_gravity="center_horizontal"
+        android:hint="Hasło"
+        android:inputType="textPassword"
+        android:textColor="?android:textColorPrimary" />
+
+    <EditText
+        android:id="@+id/password2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_marginTop="350dp"
+        android:hint="Powtórz hasło"
+        android:layout_gravity="center_horizontal"
+        android:inputType="textPassword"
+        android:textColor="?android:textColorPrimary"/>
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rejestracja"
+        android:layout_marginTop="450dp"
+        android:layout_gravity="center_horizontal"
+        android:textColor="?android:textColorPrimary"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="100dp"
+        android:visibility="gone"
+        android:layout_height="100dp"
+        android:indeterminate="true"
+        android:layout_gravity="center"
+        android:indeterminateTint="#d2691e" />
+
+</FrameLayout>

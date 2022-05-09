@@ -13,10 +13,8 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import okhttp3.Dispatcher
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -103,11 +101,11 @@ class BeerListActivity: AppCompatActivity() {
                         if(data.length() != 0) {
                             for (i in 0 until data.length()) {
                                 val beer = data.getJSONObject(i)
-                                val view = BeerElementView(
-                                    getLayoutInflater(), beer, mMessenger!!,
-                                    userLogin, replyMessage, spinner
-                                )
-                                mainLayout.addView(view.mView)
+                               // val view = BeerElementView(
+                                //    getLayoutInflater(), beer, //mMessenger!!,
+                               //     userLogin, spinner, context, cameraFun
+                               // )
+                               // mainLayout.addView(view.mView)
                             }
                         } else {
                             Toast.makeText(applicationContext, "Brak wyników", Toast.LENGTH_LONG).show()
@@ -148,11 +146,12 @@ class BeerListActivity: AppCompatActivity() {
                         if(data.length() != 0) {
                             for (i in 0 until data.length()) {
                                 val beer = data.getJSONObject(i)
-                                val view = BeerElementView(
-                                    getLayoutInflater(), beer, mMessenger!!,
-                                    userLogin, replyMessage, spinner
-                                )
-                                mainLayout.addView(view.mView)
+                               // val view = BeerElementView(
+                               //     getLayoutInflater(), beer,
+                               //     userLogin, spinner, context, false
+                              //  )
+
+                               // mainLayout.addView(view.mView)
                             }
                         } else {
                             Toast.makeText(applicationContext, "Koniec danych", Toast.LENGTH_LONG).show()
@@ -265,7 +264,7 @@ class BeerListActivity: AppCompatActivity() {
         bindService(httpService, serviceConnection, BIND_AUTO_CREATE)
         val search = findViewById<SearchView>(R.id.searchbar)
         scroll = findViewById<BetterScrollView>(R.id.scrollable)
-        scroll?.beerList = this
+        //scroll?.beerList = this
         uploadText = findViewById<TextView>(R.id.uploadText)
         uploadSpinner = findViewById<ProgressBar>(R.id.uploadProgress)
         search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {

@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">beerapp</string>
+    <string name="baseUrl">https://k4qauqp2v9.execute-api.us-east-1.amazonaws.com/prod</string>
+
     <integer name="GET_HTTP">0</integer>
     <integer name="POST_HTTP">1</integer>
     <integer name="PUT_HTTP">2</integer>
@@ -15,4 +17,6 @@
     <integer name="BEERLISTWITHPARAMS_URL">8</integer>
     <integer name="REVIEWPUT_URL">9</integer>
     <integer name="REVIEWNUMBER_URL">10</integer>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
