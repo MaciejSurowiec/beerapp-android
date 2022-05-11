@@ -37,13 +37,25 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    fun logout() {
+        val sharedPref = getSharedPreferences("userInfo", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+
+        if (sharedPref.contains("userLogin")) {
+            editor.remove("userLogin")
+            editor.apply()
+        }
+
+        val navHostFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        val action = LoggedFragmentDirections.actionLoggedFragmentToUnloggedFragment()
+        navController.navigate(action)
+    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val navHostFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         val sharedPref = getSharedPreferences("userInfo", AppCompatActivity.MODE_PRIVATE)
-
-
 
 
         when (item.itemId) {
@@ -52,7 +64,7 @@ class MainActivity : AppCompatActivity() {
                 navController.navigate(action)
             }
             R.id.logout -> {
-                //logout()
+                logout()
             }
         }
         return super.onOptionsItemSelected(item)

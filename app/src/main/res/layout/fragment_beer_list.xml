@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BeerListFragment">
+    tools:context=".BeerListFragment"
+    android:padding="10dp">
 
 
     <ProgressBar
@@ -11,12 +12,15 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:layout_gravity="right"
         android:indeterminate="true"
         android:indeterminateTint="@color/chocolate"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/uploadText"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"

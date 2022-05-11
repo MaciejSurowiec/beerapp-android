@@ -36,12 +36,13 @@
         android:layout_marginTop="350dp"
         android:text="Zaloguj"
         android:textColor="?android:textColorPrimary"
-        android:textSize="20sp" />
+        android:textSize="15sp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleLarge"
         android:visibility="gone"
+        android:layout_gravity="center"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:indeterminate="true"

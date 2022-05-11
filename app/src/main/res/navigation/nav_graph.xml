@@ -18,21 +18,24 @@
             app:destination="@id/unloggedFragment" />
     </fragment>
     <fragment
-        android:id="@+id/loginFragment2"
+        android:id="@+id/loginFragment"
         android:name="com.example.beerapp.LoginFragment"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login" >
         <action
-            android:id="@+id/action_loginFragment2_to_loggedFragment"
-            app:destination="@id/loggedFragment" />
+            android:id="@+id/action_loginFragment_to_loggedFragment"
+            app:destination="@id/loggedFragment" >
+            <argument
+                android:name="userLogin" />
+        </action>
     </fragment>
     <fragment
-        android:id="@+id/registerFragment2"
+        android:id="@+id/registerFragment"
         android:name="com.example.beerapp.RegisterFragment"
         android:label="fragment_register"
         tools:layout="@layout/fragment_register" >
         <action
-            android:id="@+id/action_registerFragment2_to_loggedFragment"
+            android:id="@+id/action_registerFragment_to_loggedFragment"
             app:destination="@id/loggedFragment" />
     </fragment>
     <fragment
@@ -49,6 +52,9 @@
         <argument
             android:name="StatJson"
             app:argType="string" />
+        <action
+            android:id="@+id/action_loggedFragment_to_unloggedFragment"
+            app:destination="@id/unloggedFragment" />
     </fragment>
     <fragment
         android:id="@+id/unloggedFragment"
@@ -56,11 +62,11 @@
         android:label="fragment_unlogged"
         tools:layout="@layout/fragment_unlogged" >
         <action
-            android:id="@+id/action_unloggedFragment_to_loginFragment2"
-            app:destination="@id/loginFragment2" />
+            android:id="@+id/action_unloggedFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
         <action
-            android:id="@+id/action_unloggedFragment_to_registerFragment2"
-            app:destination="@id/registerFragment2" />
+            android:id="@+id/action_unloggedFragment_to_registerFragment"
+            app:destination="@id/registerFragment" />
     </fragment>
     <fragment
         android:id="@+id/beerListFragment"

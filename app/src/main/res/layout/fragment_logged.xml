@@ -11,12 +11,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:layout_gravity="center_horizontal"
-    android:layout_marginTop="50dp"
+    android:layout_marginTop="20dp"
     android:padding="20dp"
     >
     <TextView
         android:id="@+id/welcome"
-        android:text="welcome"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -24,7 +23,6 @@
 
     <TextView
         android:id="@+id/reviewNumber"
-        android:text="review"
         android:layout_width="wrap_content"
         android:textSize="15sp"
         android:layout_height="wrap_content"/>
@@ -33,14 +31,13 @@
         android:id="@+id/photoNumber"
         android:layout_width="wrap_content"
         android:textSize="15sp"
-        android:text="photo"
         android:layout_height="wrap_content"/>
 
 </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="550dp"
+        android:layout_height="500dp"
         android:layout_gravity="bottom"
         android:layout_weight="0.6">
 

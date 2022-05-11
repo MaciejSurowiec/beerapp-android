@@ -21,32 +21,29 @@ class BeerElementView {
     private val client = OkHttpClient()
     private var context: Context? = null
     private var activitySpinner: ProgressBar? = null
+    private lateinit var beerFragment: BeerListFragment
 
     private suspend fun sendReview(json: JSONObject,put: Boolean){
-        val formBody: RequestBody = RequestBody.create(JSON, json.toString())
 
         var url="${context?.getString(com.example.beerapp.R.string.baseUrl)}/reviews"
         var request: Request? = null
 
         if(put) {
+            val formBody: RequestBody = FormBody.create(JSON, json!!["stars"].toString())
             url += "/${json!!["login"]}/${json!!["beer_id"]}"
-            request = Request.Builder()
-                .url(url)
-                .put(formBody)
-                .build()
+            request = Request.Builder().url(url).put(formBody).build()
         } else {
-            request = Request.Builder()
-                .url(url)
-                .post(formBody)
-                .build()
+            val formBody: RequestBody = RequestBody.create(JSON, json.toString())
+            request = Request.Builder().url(url).post(formBody).build()
         }
 
         val response: Response = client.newCall(request).execute()
         withContext(Dispatchers.Main) {
             activitySpinner!!.visibility = View.GONE
+
+            Toast.makeText(beerFragment?.activity?.baseContext, "Ocena wysłana", Toast.LENGTH_LONG).show()
         }
     }
-
 
 
     suspend fun downloadImage(url: String) {
@@ -111,7 +108,12 @@ class BeerElementView {
             rated = true
         }
         if(rating.rating == 0.0f) {
-            rateButton.setEnabled(false)
+            rateButton.isEnabled = false
+        }
+        if(beer.has("review")) {
+            if (rating.rating == beer["review"].toString().toFloat()) {
+                rateButton.isEnabled = false
+            }
         }
 
         if(beerList == null){
@@ -119,51 +121,52 @@ class BeerElementView {
             cameraButton.visibility = View.GONE
         } else {
             rating.setOnRatingBarChangeListener { ratingBar, fl, b ->
-                if(rating.rating > 0.0f) {
+                if (rating.rating > 0.0f) {
                     rateButton.setEnabled(true)
                 } else {
                     rateButton.setEnabled(false)
                 }
+
+                if(beer.has("review")) {
+                    if(rating.rating == beer["review"].toString().toFloat()){
+                        rateButton.isEnabled = false
+                    } else {
+                        rateButton.isEnabled = true
+                    }
+                }
             }
 
-            rateButton.setOnClickListener{
+            beerFragment = beerList
+            rateButton.setOnClickListener {
                 spinner.visibility = View.VISIBLE
                 val beerint = beer["beerId"].toString().toInt()
 
-                if(rating.rating > 0) {
+                if (rating.rating > 0) {
                     val json = JSONObject(
-                        mapOf( "login" to user,
+                        mapOf(
+                            "login" to user,
                             "beer_id" to beer["beerId"].toString(),
-                            "stars" to rating.rating.toInt()))
+                            "stars" to rating.rating.toInt()
+                        )
+                    )
 
-                    if(rated) {//put
+                    if (rated) {//put
                         CoroutineScope(Dispatchers.IO).launch {
-                            sendReview(json,true)
+                            sendReview(json, true)
                         }
                     } else {//post
                         CoroutineScope(Dispatchers.IO).launch {
-                            sendReview(json,false)
+                            sendReview(json, false)
                         }
                     }
                 }
             }
 
-            cameraButton.setOnClickListener{
-                if(beerList!= null) {
-                    val url = "${context?.getString(com.example.beerapp.R.string.baseUrl)}/beers/${beer["beerId"].toString()}/image"
-                    beerList.startCamera(url)
-                }
+            cameraButton.setOnClickListener {
 
-
-                /*
-                val message = Message.obtain(null, com.example.beerapp.R.integer.GET_HTTP, com.example.beerapp.R.integer.BEERIMAGEUPLOAD_URL, 2)
-                message.replyTo = reply
-                val bundle = Bundle()
-                val json = JSONObject(mapOf("beerid" to beer["beerId"].toString()))
-                bundle.putString("json", json.toString())
-                message.data = bundle
-                messenger!!.send(message)
-                 */
+                val url =
+                    "${context?.getString(com.example.beerapp.R.string.baseUrl)}/beers/${beer["beerId"].toString()}/image"
+                beerList.startCamera(url)
             }
         }
     }

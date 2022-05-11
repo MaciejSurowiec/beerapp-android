@@ -10,10 +10,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.SearchView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
+import okhttp3.internal.Util.EMPTY_REQUEST
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -53,6 +51,9 @@ class BeerListFragment : Fragment() {
     private lateinit var photoURI: Uri
     private lateinit var mCurrentPhotoPath: String
     private lateinit var uploadUrl: String
+    private var uploadSpinner: ProgressBar? = null
+    private var uploadText: TextView? = null
+
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +76,8 @@ class BeerListFragment : Fragment() {
         scroll = thisView?.findViewById(R.id.scrollable)
         scroll!!.beerList = this
         search = thisView?.findViewById(R.id.searchbar)
+        uploadSpinner = thisView?.findViewById(R.id.uploadProgress)
+        uploadText = thisView?.findViewById(R.id.uploadText)
         searchEngine()
         CoroutineScope(Dispatchers.IO).launch {
             showList()
@@ -127,16 +130,23 @@ class BeerListFragment : Fragment() {
     suspend fun getImageUrl(url: String, bitmap: ByteArray) {
         var json: JSONObject? = null
         try {
-            var request = Request.Builder().url(url).build()
-            var response = client.newCall(request).execute()
+            val request = Request.Builder().url(url).build()
+            val response = client.newCall(request).execute()
             json = JSONObject(response.body()?.string())
         } catch (e: java.lang.Exception) {
-            null
             json = JSONObject(mapOf("content" to "error"))
         }
 
         uploadImage(json?.get("content").toString(), bitmap)
     }
+
+    suspend fun incrementPhotoNumber() {
+        val url = "${activity?.getString(R.string.baseUrl)}/users/${userLogin}/photos"
+        val request = Request.Builder().url(url).post(EMPTY_REQUEST).build()
+        val response = client.newCall(request).execute()
+
+    }
+
 
     suspend fun uploadImage(url: String, bitmap: ByteArray){
          val formBody: RequestBody = RequestBody.create(MediaType.parse("image/*jpg"),bitmap)
@@ -146,6 +156,13 @@ class BeerListFragment : Fragment() {
             .build()
 
         val response: Response = client.newCall(request).execute()
+
+        incrementPhotoNumber()
+
+        withContext(Dispatchers.Main) {
+            uploadText?.visibility = View.GONE
+            uploadSpinner?.visibility = View.GONE
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -155,8 +172,8 @@ class BeerListFragment : Fragment() {
                 val stream = ByteArrayOutputStream()
                 val bitmap = MediaStore.Images.Media.getBitmap(activity?.getContentResolver(), photoURI)
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                //uploadText?.visibility=View.VISIBLE
-                //uploadSpinner?.visibility=View.VISIBLE
+                uploadText?.visibility = View.VISIBLE
+                uploadSpinner?.visibility = View.VISIBLE
                 CoroutineScope(Dispatchers.IO).launch {
                     getImageUrl(uploadUrl, stream.toByteArray())
                 }
@@ -223,7 +240,6 @@ class BeerListFragment : Fragment() {
     }
 
     suspend fun showList() {
-
         val json = downloadList()
         withContext(Dispatchers.Main) {
             val mainLayout = thisView?.findViewById<LinearLayout>(R.id.beerlist_layout)

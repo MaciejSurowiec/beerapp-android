@@ -7,7 +7,9 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -30,13 +32,11 @@ class LoggedFragment : Fragment() {
     private var param2: String? = null
     private var spinner: ProgressBar? = null
     private var thisView: View? = null
-    private var jsonStr: String? = null
+    private var jsonStr: String = ""
 
     suspend fun getStatistics(){
-
         val url = "${getString(R.string.baseUrl)}/users/${userLogin}/statistics"
         var response: Response? = null
-        var jsonStr: String? = null
         var json: JSONObject? = null
         try {
             var client = OkHttpClient()
@@ -47,8 +47,26 @@ class LoggedFragment : Fragment() {
             null
         }
 
-        withContext(Dispatchers.Main) {
+        //jsonStr = json?.get("content").toString()
+        var content = json?.get("content") as JSONObject
 
+        val data = content.getJSONArray("lastThreeReviews")
+
+        withContext(Dispatchers.Main) {
+            thisView?.findViewById<TextView>(R.id.welcome)?.text = "Witaj ${userLogin}"
+            thisView?.findViewById<TextView>(R.id.reviewNumber)?.text = "Liczba ocenionych piw: ${content["numberOfReviews"].toString()}"
+            thisView?.findViewById<TextView>(R.id.photoNumber)?.text = "Liczba wysłanych zdjęć: ${content["numberOfPhotos"].toString()}"
+            val mainLayout = thisView?.findViewById<LinearLayout>(R.id.lastreviewed)
+
+            for (i in 0 until data.length()) {
+                val beer = data.getJSONObject(i)
+                val view = BeerElementView(
+                    getLayoutInflater(), beer,
+                    userLogin!!, spinner!!,
+                    requireActivity().baseContext
+                )
+                mainLayout?.addView(view.mView)
+            }
         }
     }
 
@@ -70,6 +88,7 @@ class LoggedFragment : Fragment() {
             )
             mainLayout?.addView(view.mView)
         }
+        jsonStr = ""
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,7 +99,6 @@ class LoggedFragment : Fragment() {
         }
     }
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -88,7 +106,15 @@ class LoggedFragment : Fragment() {
         (activity as AppCompatActivity)?.getSupportActionBar()?.show()
         thisView = inflater.inflate(R.layout.fragment_logged, container, false)
         spinner = thisView?.findViewById(R.id.progressBar2)
-        showStatistics()
+
+        if(jsonStr.isEmpty()){
+            CoroutineScope(Dispatchers.IO).launch {
+                getStatistics()
+            }
+        }
+        else {
+            showStatistics()
+        }
         // Inflate the layout for this fragment
         return thisView
     }
