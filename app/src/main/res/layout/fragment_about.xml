@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="25dp"
+    tools:context=".AboutFragment">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="O BeerUp:"
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="10dp"
+        android:textSize="30dp"
+        />
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/abouttext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="100dp"
+            android:text="Aplikacja jest obecnie rozwijana i nie posiada jeszcze wszystkich docelowych funkcjonalności, ale dane
+dostarczone przez Ciebie pozwolą nam na jej szybkie rozwinięcie. Do docelowych funkcjonalności należą:
+system rekomendacji piw, dzięki któremu nie będziesz musiał się zastanawiać w sklepie jakie piwo wybrać,
+system rozpoznawania etykiet ze zdjęć, dzięki któremu zrobisz po prostu zdjęcie sklepowej półki,
+a aplikacja sama rozpozna obecne na niej piwa.
+Zachęcamy do intensywnego korzystania z aplikacji 🙂"
+            android:textSize="20dp" />
+    </ScrollView>
+</FrameLayout>

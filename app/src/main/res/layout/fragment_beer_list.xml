@@ -17,16 +17,6 @@
         android:indeterminateTint="@color/chocolate"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/uploadText"
-        android:layout_marginTop="30dp"
-        android:layout_gravity="right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:text="Trwa wysyłanie zdjęcia"
-        android:textSize="9sp" />
-
     <SearchView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,9 +24,17 @@
         android:inputType="text"
         android:textSize="15sp"
         />
+<Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="100dp"
+    android:visibility="gone"
+    android:id="@+id/downloadlist"
+    android:text="Pobierz listę ponownie"
+    android:layout_gravity="center_horizontal"
+    />
 
-
-    <com.example.beerapp.BetterScrollView
+    <com.beerup.beerapp.BetterScrollView
         android:id="@+id/scrollable"
         android:layout_marginTop="140px"
         android:layout_width="match_parent"
@@ -49,11 +47,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
-            android:numColumns="2"
             android:orientation="vertical"
             tools:context=".MainActivity" />
 
-    </com.example.beerapp.BetterScrollView>
+    </com.beerup.beerapp.BetterScrollView>
 
     <ProgressBar
         android:id="@+id/progressBar"

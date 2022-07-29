@@ -1,64 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LoggedFragment"
     android:orientation="horizontal"
-    >
+    tools:context=".LoggedFragment">
+    <LinearLayout
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 <LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginTop="20dp"
-    android:padding="20dp"
-    >
-    <TextView
-        android:id="@+id/welcome"
-        android:textSize="15sp"
+    android:layout_width="match_parent"
+    android:layout_weight="0.4"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    android:layout_height="0dp">
+    <RelativeLayout
+        android:id="@+id/userinfo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:orientation="vertical"
+            >
+            <TextView
+                android:text="Ocenione piwa"
+                android:textSize="17dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                />
+            <TextView
+                android:id="@+id/reviewNumber"
+                android:padding="25dp"
+                android:background="@drawable/tagitemadded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="-"
+                android:textSize="30sp"
+            />
+        </LinearLayout>
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        />
+        android:orientation="vertical"
+        android:layout_alignParentRight="true"
+        >
+
+        <TextView
+            android:text="Dodane zdjęcia"
+            android:textSize="17dp"
+            android:layout_marginBottom="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
 
     <TextView
-        android:id="@+id/reviewNumber"
-        android:layout_width="wrap_content"
-        android:textSize="15sp"
-        android:layout_height="wrap_content"/>
+            android:id="@+id/photoNumber"
+            android:padding="25dp"
+            android:background="@drawable/tagitemadded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:layout_gravity="center"
+            android:textSize="30sp"
+            />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/photoNumber"
-        android:layout_width="wrap_content"
-        android:textSize="15sp"
-        android:layout_height="wrap_content"/>
-
+    </RelativeLayout>
 </LinearLayout>
-
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
-        android:layout_height="500dp"
-        android:layout_gravity="bottom"
-        android:layout_weight="0.6">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/userinfo">
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/lastreviewed"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="Ostatnio ocenione piwa:"
+            android:id="@+id/beertext"
+            android:textSize="20sp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:textSize="15dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:id="@+id/retrybutton"
+            android:text="Spróbuj Połączyć ponownie"
+            />
+
+        <ScrollView
+            android:id="@+id/scroll"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
-            tools:context=".MainActivity" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    </ScrollView>
+            <LinearLayout
+                android:id="@+id/lastreviewed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </ScrollView>
+    </LinearLayout>
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar2"
         style="?android:attr/progressBarStyleLarge"
-        android:visibility="gone"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:indeterminate="true"
-        android:indeterminateTint="@color/chocolate" />
+        android:indeterminateTint="@color/chocolate"
+        android:visibility="gone"
+        app:layout_constraintBaseline_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

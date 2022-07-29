@@ -4,19 +4,34 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../../../layout/custom_preview.xml" value="0.2526041666666667" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.111" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable-v24/tagitem.xml" value="0.111" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/beeritem.xml" value="0.115" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/expand.xml" value="0.1265" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/ic_launcher_background.xml" value="0.111" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/tagItemNotAdded.xml" value="0.111" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/tagitemadded.xml" value="0.111" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/tagitemnotadded.xml" value="0.111" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/drawable/tagitemnotaddednight.xml" value="0.1335" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/activity_beerlist.xml" value="0.1" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/activity_login.xml" value="0.264" />
-        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/activity_main.xml" value="0.136" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/activity_main.xml" value="0.2" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/activity_register.xml" value="0.176" />
-        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/beer_element.xml" value="0.25" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/beer_element.xml" value="0.1" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_about.xml" value="0.1" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_beer_details.xml" value="0.1" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_beer_list.xml" value="0.264" />
-        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_logged.xml" value="0.16041666666666668" />
-        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_login.xml" value="0.1693840579710145" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_logged.xml" value="0.264" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_login.xml" value="0.1" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_register.xml" value="0.1693840579710145" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_starting.xml" value="0.2" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/fragment_unlogged.xml" value="0.25416666666666665" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/popup_menu.xml" value="0.21784420289855072" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/tag_layout.xml" value="0.1" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/layout/test.xml" value="0.152" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/menu/bottom_navigation_menu.xml" value="0.1" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/menu/popup_menu.xml" value="0.1359375" />
+        <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1" />
         <entry key="..\:/Users/suruw/AndroidStudioProjects/beerapp2/app/src/main/res/xml/file_paths.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_beerlist.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_login.xml" value="0.1" />

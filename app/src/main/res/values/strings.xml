@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">beerapp</string>
+    <string name="app_name">BeerUp</string>
     <string name="baseUrl">https://k4qauqp2v9.execute-api.us-east-1.amazonaws.com/prod</string>
 
     <integer name="GET_HTTP">0</integer>

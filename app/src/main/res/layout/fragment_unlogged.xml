@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="15sp"
+        android:padding="35sp"
         android:layout_gravity="center">
 
         <Button
@@ -22,12 +22,23 @@
             />
 
         <Button
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
             android:id="@+id/register"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="15sp"
             android:layout_gravity="center"
             android:text="Rejestracja"
+            android:textColor="?android:textColorPrimary"/>
+
+        <Button
+            android:id="@+id/aboutbutton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:layout_gravity="center"
+            android:text="O nas"
             android:textColor="?android:textColorPrimary"/>
     </LinearLayout>
 

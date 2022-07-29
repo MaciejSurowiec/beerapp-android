@@ -9,9 +9,10 @@
     <androidx.percentlayout.widget.PercentRelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:gravity="center_horizontal"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -19,8 +20,7 @@
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/beeritem"
-            android:padding="10sp"
+            android:background="?android:attr/selectableItemBackground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -28,13 +28,54 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_widthPercent="90%">
-            <!--  android:layout_marginLeft="50px"-->
-            <ImageView
-                android:id="@+id/beerimage"
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Brak Danych"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="50dp"
+            android:id="@+id/endofdata"
+            android:textAlignment="center"
+            android:visibility="gone"
+            android:textSize="20dp"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:id="@+id/beercontainer"
+            android:layout_height="wrap_content"
+            android:background="@drawable/beeritem"
+            android:padding="10sp">
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="6px"
-                android:layout_weight=".2" />
+                android:layout_weight=".2">
+                <ImageView
+                    android:id="@+id/beerimage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                     />
+
+                <ProgressBar
+                    style="?android:attr/progressBarStyleLarge"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:id="@+id/imagebar"
+                    android:indeterminate="true"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="#d2691e"
+                    />
+                <TextView
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Brak zdjęcia"
+                    android:id="@+id/nophoto"
+                    android:textSize="15dp"
+                    android:visibility="gone"
+                    />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -98,36 +139,12 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
-                    android:isIndicator="false"
-                    android:numStars="10"
-                    android:stepSize="1" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/rate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:layout_marginLeft="30px"
-                        android:padding="0dp"
-                        android:text="oceń"
-                        android:textSize="10sp" />
-
-                    <Button
-                        android:id="@+id/sendphoto"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:padding="0dp"
-                        android:text="zrób zdjęcie"
-                        android:textSize="10sp" />
-
-                </RelativeLayout>
+                    android:isIndicator="true"
+                    android:max="10"
+                    android:numStars="5"
+                    android:stepSize="0.5" />
             </LinearLayout>
+        </LinearLayout>
         </LinearLayout>
     </androidx.percentlayout.widget.PercentRelativeLayout>
 

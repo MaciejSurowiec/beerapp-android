@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/startingFragment"
-        android:name="com.example.beerapp.StartingFragment"
+        android:name="com.beerup.beerapp.StartingFragment"
         android:label="fragment_starting"
         tools:layout="@layout/fragment_starting" >
         <action
@@ -19,7 +19,7 @@
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.example.beerapp.LoginFragment"
+        android:name="com.beerup.beerapp.LoginFragment"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login" >
         <action
@@ -31,7 +31,7 @@
     </fragment>
     <fragment
         android:id="@+id/registerFragment"
-        android:name="com.example.beerapp.RegisterFragment"
+        android:name="com.beerup.beerapp.RegisterFragment"
         android:label="fragment_register"
         tools:layout="@layout/fragment_register" >
         <action
@@ -40,7 +40,7 @@
     </fragment>
     <fragment
         android:id="@+id/loggedFragment"
-        android:name="com.example.beerapp.LoggedFragment"
+        android:name="com.beerup.beerapp.LoggedFragment"
         android:label="fragment_logged"
         tools:layout="@layout/fragment_logged" >
         <action
@@ -55,10 +55,16 @@
         <action
             android:id="@+id/action_loggedFragment_to_unloggedFragment"
             app:destination="@id/unloggedFragment" />
+        <action
+            android:id="@+id/action_loggedFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
+        <action
+            android:id="@+id/action_loggedFragment_to_beerDetailsFragment"
+            app:destination="@id/beerDetailsFragment" />
     </fragment>
     <fragment
         android:id="@+id/unloggedFragment"
-        android:name="com.example.beerapp.UnloggedFragment"
+        android:name="com.beerup.beerapp.UnloggedFragment"
         android:label="fragment_unlogged"
         tools:layout="@layout/fragment_unlogged" >
         <action
@@ -67,14 +73,52 @@
         <action
             android:id="@+id/action_unloggedFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
+        <action
+            android:id="@+id/action_unloggedFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
     </fragment>
     <fragment
         android:id="@+id/beerListFragment"
-        android:name="com.example.beerapp.BeerListFragment"
+        android:name="com.beerup.beerapp.BeerListFragment"
         android:label="fragment_beer_list"
         tools:layout="@layout/fragment_beer_list" >
         <argument
             android:name="userLogin"
             app:argType="string" />
+        <action
+            android:id="@+id/action_beerListFragment_to_beerDetailsFragment"
+            app:destination="@id/beerDetailsFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out" />
+        <action
+            android:id="@+id/action_beerListFragment_to_loggedFragment"
+            app:destination="@id/loggedFragment" />
+        <action
+            android:id="@+id/action_beerListFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/beerDetailsFragment"
+        android:name="com.beerup.beerapp.BeerDetailsFragment"
+        android:label="fragment_beer_details"
+        tools:layout="@layout/fragment_beer_details">
+        <argument
+            android:name="json"
+            app:argType="string" />
+        <argument
+            android:name="image"
+            app:argType="android.os.Bundle" />
+    </fragment>
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.beerup.beerapp.AboutFragment"
+        android:label="fragment_about"
+        tools:layout="@layout/fragment_about" >
+        <action
+            android:id="@+id/action_aboutFragment_to_loggedFragment"
+            app:destination="@id/loggedFragment" />
+        <action
+            android:id="@+id/action_aboutFragment_to_beerListFragment"
+            app:destination="@id/beerListFragment" />
     </fragment>
 </navigation>
