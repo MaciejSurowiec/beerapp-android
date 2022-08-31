@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.collection.ArraySet
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -32,11 +33,11 @@ import java.util.*
 class BeerDetailsViewModel(app: Application)
     : AndroidViewModel(app) {
 
-    private lateinit var photoURI: Uri
+    lateinit var photoURI: Uri
     private lateinit var mCurrentPhotoPath: String
     private lateinit var uploadUrl: String
     lateinit var json: JSONObject
-
+    lateinit var cameraActivity: (Intent) -> Unit
     var tagList = ArraySet<String>() // tags from json, or sent
     var actualTagList = ArraySet<String>() // tags changed by user
 
@@ -73,7 +74,7 @@ class BeerDetailsViewModel(app: Application)
         val reviewJson = JSONObject(
             mapOf(
                 "login" to json["user"],
-                "beer_id" to json["beerId"].toString().toInt(),
+                "beer_id" to beer.id.toInt(),
                 "stars" to rating.times(2).toInt()
             )
         )
@@ -185,10 +186,7 @@ class BeerDetailsViewModel(app: Application)
     }
 
 
-    fun getImageUrl(contentResolver: ContentResolver, bundle: Bundle) {
-        val stream = ByteArrayOutputStream()
-        val bitmap = bundle?.get("data") as Bitmap
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+    fun getImageUrl(byteArray: ByteArray) {
         CoroutineScope(Dispatchers.IO).launch {
             var jsonI: JSONObject? = null
             var serverError = false
@@ -201,7 +199,7 @@ class BeerDetailsViewModel(app: Application)
             }
 
             if (!serverError) {
-                uploadImage(jsonI?.get("content").toString(), stream.toByteArray())
+                uploadImage(jsonI?.get("content").toString(), byteArray)
             } else {
                 withContext(Dispatchers.Main) {
                     callbackWithSpinner("Błąd podczas wysyłania zdjęcia")
@@ -232,9 +230,9 @@ class BeerDetailsViewModel(app: Application)
                         photoFile
                     )
 
-                //cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                activityResultLauncher.launch(cameraIntent)
-                //startActivityForResult(cameraIntent, 123)
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                //activityResultLauncher.launch(cameraIntent)
+                cameraActivity(cameraIntent)
             }
         }
     }

@@ -1,9 +1,11 @@
 package com.beerup.beerapp
 
+import android.app.Application
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,7 +53,7 @@ class BeerDetailsFragment : Fragment() {
             jsonStr = arguments?.getString("json")
             bundle = arguments?.getBundle("image")
         }
-
+/*
         activityResultLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { it ->
                 if (it.resultCode == AppCompatActivity.RESULT_OK) {
@@ -66,11 +68,12 @@ class BeerDetailsFragment : Fragment() {
                     activity?.contentResolver?.let { viewModel.getImageUrl(it, bundle!!) }
                 }
             }
-
+*/
         viewModel = ViewModelProvider(this).get(BeerDetailsViewModel::class.java)
         sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
         viewModel.callbackWithSpinner = ::callbackWithSpinner
-        viewModel.activityResultLauncher = activityResultLauncher
+        viewModel.cameraActivity = ::cameraActivity
+//        viewModel.activityResultLauncher = activityResultLauncher
         viewModel.init(
             jsonStr!!,
             activity?.getString(R.string.baseUrl).toString(),
@@ -154,6 +157,27 @@ class BeerDetailsFragment : Fragment() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 123) {
+            if (resultCode == AppCompatActivity.RESULT_OK) {
+                val stream = ByteArrayOutputStream()
+                val bitmap = MediaStore.Images.Media.getBitmap(activity?.contentResolver, viewModel.photoURI)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                spinner.visibility = View.VISIBLE
+                disableUI()
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.getImageUrl(stream.toByteArray())
+                }
+            }
+        }
+    }
+
+    fun cameraActivity(cameraIntent: Intent) {
+        // so cool that google recomends (article form this month xd) deprecated functionality
+        startActivityForResult(cameraIntent, 123)
+        //also it need to be here cause this thing needs activity which couldnt be used in viewmodel
+    }
 
     fun disableUI() {
         sharedViewModel.enableBackPress = false
