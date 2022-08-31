@@ -6,9 +6,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.beerup.beerapp.ViewModels.SharedViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,39 +29,25 @@ class StartingFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
 
-    private suspend fun getStatistic(userLogin: String, navController: NavController) {
-        val url = "${getString(R.string.baseUrl)}/users/${userLogin}/statistics"
-        var jsonStr = ""
-        try {
-            val client = OkHttpClient()
-            var request = Request.Builder().url(url).build()
-            var response = client.newCall(request).execute()
-        } catch (e: java.lang.Exception) {
-            Log.i("start",e.message.toString())
-        }
+    private lateinit var sharedViewModel: SharedViewModel
+    lateinit var retryButton: Button
+    lateinit var image: ImageView
+    lateinit var text: TextView
 
-        withContext(Dispatchers.Main) {
-            val action = StartingFragmentDirections.actionStartingFragmentToLoggedFragment(
-                userLogin,
-                jsonStr // if there was an error empty string will be also fine
-            )
-            navController.navigate(action)
-        }
-    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val sharedPref = activity?.getSharedPreferences("userInfo", AppCompatActivity.MODE_PRIVATE)
 
-        val navHostFragment = activity?.getSupportFragmentManager()?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navHostFragment = activity?.supportFragmentManager?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         if(sharedPref!!.contains("userLogin")) {
-
-            var userLogin = sharedPref!!.getString("userLogin",null).toString()
-            CoroutineScope(Dispatchers.IO).launch {
-                getStatistic(userLogin, navController)
-            }
-
+            val userLogin = sharedPref!!.getString("userLogin", null).toString()
+            sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
+            sharedViewModel.userLogin = userLogin
+            sharedViewModel.getStatistics()
+            sharedViewModel.getTags()
         } else {
             val action = StartingFragmentDirections.actionStartingFragmentToUnloggedFragment()
             navController.navigate(action)
@@ -67,10 +58,65 @@ class StartingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        (activity as AppCompatActivity)?.getSupportActionBar()?.hide()
-        (activity as MainActivity)?.bottomNavigation?.visibility = View.GONE
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        (activity as MainActivity).bottomNavigation?.visibility = View.GONE
 
         return inflater.inflate(R.layout.fragment_starting, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        retryButton = view.findViewById(R.id.retrytagsbutton)
+        text = view.findViewById(R.id.startingtext)
+        image = view.findViewById(R.id.startingimage)
+
+        retryButton.setOnClickListener{
+            sharedViewModel._statsDownloaded.postValue(false)
+            sharedViewModel._tagsDownloaded.postValue(false)
+            sharedViewModel._tagsError.postValue(false)
+
+            sharedViewModel.getStatistics()
+            sharedViewModel.getTags()
+        }
+
+        sharedViewModel._statsDownloaded.observe(viewLifecycleOwner) {
+            if(it and sharedViewModel._tagsDownloaded.value!!) {
+                val navHostFragment =
+                    activity?.supportFragmentManager?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+                val navController = navHostFragment.navController
+                val action =
+                    StartingFragmentDirections.actionStartingFragmentToLoggedFragment(sharedViewModel.userLogin)
+                navController.navigate(action)
+            }
+        }
+
+        sharedViewModel._tagsDownloaded.observe(viewLifecycleOwner) {
+            if(it and sharedViewModel._statsDownloaded.value!!) {
+                val navHostFragment =
+                    activity?.supportFragmentManager?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+                val navController = navHostFragment.navController
+                val action =
+                    StartingFragmentDirections.actionStartingFragmentToLoggedFragment(sharedViewModel.userLogin)
+                navController.navigate(action)
+            }
+        }
+
+        sharedViewModel._tagsError.observe(viewLifecycleOwner) {
+            showRetryButton(it)
+        }
+    }
+
+    fun showRetryButton(show: Boolean) {
+        if(show) {
+            retryButton.visibility = View.VISIBLE
+            text.visibility = View.GONE
+            image.visibility = View.GONE
+        } else {
+            retryButton.visibility = View.GONE
+            text.visibility = View.VISIBLE
+            image.visibility = View.VISIBLE
+        }
     }
 
     companion object {

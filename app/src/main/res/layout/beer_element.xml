@@ -27,7 +27,7 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_widthPercent="90%">
+            app:layout_widthPercent="95%">
 
         <TextView
             android:layout_width="match_parent"

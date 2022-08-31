@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
+import com.beerup.beerapp.ViewModels.SharedViewModel
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -17,8 +19,12 @@ private const val ARG_PARAM2 = "param2"
 class UnloggedFragment : Fragment() {
     // TODO: Rename and change types of parameter
 
+    private lateinit var sharedViewModel: SharedViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
+
     }
 
     override fun onCreateView(
@@ -26,13 +32,13 @@ class UnloggedFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view =  inflater.inflate(R.layout.fragment_unlogged, container, false)
-        (activity as AppCompatActivity)?.getSupportActionBar()?.hide()
-        (activity as MainActivity).backButtonEnd = true
-        (activity as MainActivity)?.bottomNavigation?.visibility = View.GONE
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        sharedViewModel.backButtonEnd = true
+        (activity as MainActivity).bottomNavigation?.visibility = View.GONE
         val registerButton = view?.findViewById<Button>(R.id.register)
         val loginButton = view?.findViewById<Button>(R.id.login)
         val aboutButton = view?.findViewById<Button>(R.id.aboutbutton)
-        val navHostFragment = activity?.getSupportFragmentManager()?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navHostFragment = activity?.supportFragmentManager?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
         registerButton?.setOnClickListener {
@@ -50,9 +56,7 @@ class UnloggedFragment : Fragment() {
             navController.navigate(action)
         }
 
-        val mainActivity = activity as MainActivity
-        mainActivity.enableBackPress = false
-        // Inflate the layout for this fragment
+        sharedViewModel.enableBackPress = false
         return view
     }
 

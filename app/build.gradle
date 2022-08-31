@@ -11,8 +11,8 @@ android {
         applicationId "com.beerup.beerapp"
         minSdk 21
         targetSdk 32
-        versionCode 6
-        versionName "1.17"
+        versionCode 7
+        versionName "1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,4 +59,5 @@ dependencies {
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation 'com.google.android:flexbox:1.1.0'
+    implementation "javax.inject:javax.inject:1"
 }

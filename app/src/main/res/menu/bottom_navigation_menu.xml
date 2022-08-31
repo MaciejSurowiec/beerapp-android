@@ -1,17 +1,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/homepage"
+        android:id="@+id/loggedFragment"
         android:enabled="true"
         android:icon="@drawable/logo"
         android:title="Strona główna" />
 
     <item
-        android:id="@+id/beerlist"
+        android:id="@+id/beerListFragment"
         android:enabled="true"
         android:icon="@android:drawable/ic_menu_sort_by_size"
         android:title="Lista piw" />
     <item
-        android:id="@+id/about"
+        android:id="@+id/aboutFragment"
         android:enabled="true"
         android:title="O nas"
         android:icon="@android:drawable/ic_dialog_info" />

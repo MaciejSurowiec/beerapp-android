@@ -7,218 +7,157 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.NavHostFragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import org.json.JSONObject
+import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.ViewModelProvider
+import com.beerup.beerapp.ViewModels.LoggedViewModel
+import com.beerup.beerapp.ViewModels.SharedViewModel
 
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [LoggedFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+
 class LoggedFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var userLogin: String? = null
+
     private var param2: String? = null
-    private var spinner: ProgressBar? = null
-    private var thisView: View? = null
+    private lateinit var spinner: ProgressBar
+    private lateinit var thisView: View
     private var jsonStr: String = ""
 
+    private lateinit var viewModel: LoggedViewModel
+    private lateinit var sharedViewModel: SharedViewModel
 
-    suspend fun getStatistics(){
-        val url = "${getString(R.string.baseUrl)}/users/${userLogin}/statistics"
-        var response: Response? = null
-        var json: JSONObject? = null
-        var serverError = false
-        try {
-            var client = OkHttpClient()
-            var request = Request.Builder().url(url).build()
-            var response = client.newCall(request).execute()
-            jsonStr = response.body()?.string().toString()
-        } catch (e: java.lang.Exception) {
-            serverError = true
-        }
+    private lateinit var photosText: TextView
+    private lateinit var reviewText: TextView
 
-        if(!serverError) {
-            withContext(Dispatchers.Main) {
-                (activity as MainActivity).mainMenu?.findItem(R.id.logout)?.isEnabled = true
-                (activity as MainActivity).mainMenu?.findItem(R.id.beerlist)?.isEnabled = true
-                (activity as MainActivity).mainMenu?.findItem(R.id.about)?.isEnabled = true
-                spinner?.visibility = View.GONE
-                if(jsonStr.isNotEmpty()) {
-                    val json = JSONObject(jsonStr)
-                    var content = json?.get("content") as JSONObject
-                    val data = content.getJSONArray("lastThreeReviews")
-                    (activity as MainActivity).sentPhotos =
-                        content["numberOfPhotos"].toString().toInt()
-                    (activity as MainActivity).reviedBeers =
-                        content["numberOfReviews"].toString().toInt()
-                    for (i in 0 until data.length()) {
-                        val beer = data.getJSONObject(i)
-                        val view = BeerElementView(
-                            getLayoutInflater(), beer,
-                            userLogin!!, spinner!!,
-                            requireActivity().baseContext, this@LoggedFragment
-                        )
-                        (activity as MainActivity).beerList.add(view)
-                    }
-
-                    showStatistics()
-                } else {
-                    retryButton()
-                }
-            }
-        } else {
-            withContext(Dispatchers.Main) {
-               retryButton()
-            }
-        }
-    }
-
-    private fun retryButton() {
-        var retryButton = thisView?.findViewById<Button>(R.id.retrybutton)
-        (activity as AppCompatActivity)?.getSupportActionBar()?.hide()
-        retryButton?.visibility = View.VISIBLE
-        spinner?.visibility = View.GONE
-        thisView?.findViewById<TextView>(R.id.beertext)?.visibility = View.GONE
-        thisView?.findViewById<RelativeLayout>(R.id.userinfo)?.visibility = View.GONE
-        retryButton?.setOnClickListener {
-            retryButton?.visibility = View.GONE
-            spinner?.visibility = View.VISIBLE
-            (activity as AppCompatActivity)?.getSupportActionBar()?.show()
-            thisView?.findViewById<RelativeLayout>(R.id.userinfo)?.visibility = View.VISIBLE
-            thisView?.findViewById<TextView>(R.id.beertext)?.visibility = View.VISIBLE
-            CoroutineScope(Dispatchers.IO).launch {
-                getStatistics()
-            }
-        }
-    }
-
-    private fun showStatistics() {
-        thisView?.findViewById<TextView>(R.id.reviewNumber)?.text = (activity as MainActivity).reviedBeers.toString()
-        thisView?.findViewById<TextView>(R.id.photoNumber)?.text = (activity as MainActivity).sentPhotos.toString()
-
-        val mainLayout = thisView?.findViewById<LinearLayout>(R.id.lastreviewed)
-        mainLayout?.removeAllViews()
-        for (i in 0 until (activity as MainActivity).beerList.size) {
-            if((activity as MainActivity).beerList[i].notInList) {
-                (activity as MainActivity).beerList[i].addToBeerList(spinner!!,this@LoggedFragment)
-            }
-            if(this.isVisible) {
-                mainLayout?.addView((activity as MainActivity).beerList[i].mView)
-                (activity as MainActivity).beerList[i].setImage()
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var userLogin: String = ""
         arguments?.let {
-            userLogin = it.getString("userLogin")
+            userLogin = it.getString("userLogin").toString()
             jsonStr = it.getString("StatJson").toString()
         }
+
+        viewModel = ViewModelProvider(this).get(LoggedViewModel::class.java)
+        viewModel.baseUrl = getString(R.string.baseUrl)
+        viewModel.errorCallback = ::errorCallback
+        viewModel.userLogin = userLogin
+
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
+        viewModel.sharedViewModel = sharedViewModel
+        sharedViewModel.userLogin = userLogin
+
+        if(sharedViewModel._beerList.value == null) {
+            viewModel.getStatistics(::statisticsCallback)
+        } else {
+            viewModel.showStats = true
+        }
     }
+
+
+    private fun statisticsCallback(success: Boolean) {
+        if(success) {
+            showStatistics()
+        } else {
+            retryButton()
+        }
+    }
+
+
+    private fun errorCallback(message: String) {
+        Toast.makeText(activity?.baseContext,
+            message,
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         //(activity as AppCompatActivity)?.getSupportActionBar()?.show()
-        (activity as MainActivity).backButtonEnd = true
-        (activity as MainActivity)?.bottomNavigation?.visibility = View.VISIBLE
+        sharedViewModel.enableBackPress = false
+        sharedViewModel.backButtonEnd = true
+        (activity as MainActivity).bottomNavigation?.visibility = View.VISIBLE
         thisView = inflater.inflate(R.layout.fragment_logged, container, false)
 
         return thisView
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val main = activity as MainActivity
-        if(main.beerid != "") {
-            for (i in 0 until main.beerList.size) {
-                if (main.beerList.get(i).id.equals(main.beerid)) {
-                    if (main.rating != 0.0f) {
-                        main.beerList.get(i).updateRate(main.rating)
-                        main.rating = 0.0f
-                    }
+        sharedViewModel.enableBackPress = false
 
-                    if (main.list != null) {
-                        main.beerList.get(i).tags = main.list
-                        main.list = null
-                    }
+        photosText = thisView.findViewById(R.id.photoNumber)
+        reviewText = thisView.findViewById(R.id.reviewNumber)
 
-                    main.beerid = ""
-                    break
-                }
-            }
+        spinner = thisView.findViewById(R.id.progressBar2)
+
+        sharedViewModel._photos.observe(viewLifecycleOwner) {
+            photosText.text = sharedViewModel._photos.value
         }
 
-        spinner = thisView?.findViewById(R.id.progressBar2)
-        if(main.beerList.size == 0) {
-            if(jsonStr.isNotEmpty()) {
-                val json = JSONObject(jsonStr)
-                var content = json?.get("content") as JSONObject
-                val data = content.getJSONArray("lastThreeReviews")
-                (activity as MainActivity).sentPhotos = content["numberOfPhotos"].toString().toInt()
-                (activity as MainActivity).reviedBeers = content["numberOfReviews"].toString().toInt()
-                for (i in 0 until data.length()) {
-                    val beer = data.getJSONObject(i)
-                    val view = BeerElementView(
-                        getLayoutInflater(), beer,
-                        userLogin!!, spinner!!,
-                        requireActivity().baseContext, this@LoggedFragment
-                    )
-                    (activity as MainActivity).beerList.add(view)
-                }
-                if(this.isVisible) {
-                    showStatistics()
-                }
-            } else {
-                (activity as MainActivity).mainMenu?.findItem(R.id.logout)?.isEnabled = false
-                (activity as MainActivity).mainMenu?.findItem(R.id.beerlist)?.isEnabled = false
-                (activity as MainActivity).mainMenu?.findItem(R.id.about)?.isEnabled = false
-                spinner?.visibility = View.VISIBLE
-                CoroutineScope(Dispatchers.IO).launch {
-                    getStatistics()
-                }
-            }
+        sharedViewModel._reviewedBeers.observe(viewLifecycleOwner) {
+            reviewText.text = sharedViewModel._reviewedBeers.value
         }
-        else {
+
+        if(viewModel.showStats) {
+            childFragmentManager.fragments.forEach {
+                childFragmentManager.beginTransaction().remove(it).commit()
+            }
             showStatistics()
         }
-
-        val navHostFragment = activity?.getSupportFragmentManager()?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        val mainActivity = activity as MainActivity
-        mainActivity.enableBackPress = false
     }
 
-    fun removeBeerElements() {
-        val mainLayout = thisView?.findViewById<LinearLayout>(R.id.lastreviewed)
 
-        for (i in 0 until (activity as MainActivity).beerList.size) {
-            mainLayout?.removeView((activity as MainActivity).beerList.get(i).mView)
+    private fun retryButton() {
+        var retryButton = thisView.findViewById<Button>(R.id.retrybutton)
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        retryButton?.visibility = View.VISIBLE
+        spinner.visibility = View.GONE
+        thisView.findViewById<TextView>(R.id.beertext).visibility = View.GONE
+        thisView.findViewById<RelativeLayout>(R.id.userinfo).visibility = View.GONE
+        retryButton?.setOnClickListener {
+            retryButton.visibility = View.GONE
+            spinner.visibility = View.VISIBLE
+            (activity as AppCompatActivity).supportActionBar?.show()
+            thisView.findViewById<RelativeLayout>(R.id.userinfo).visibility = View.VISIBLE
+            thisView.findViewById<TextView>(R.id.beertext).visibility = View.VISIBLE
+
+            if(sharedViewModel._beerList.value == null) {
+                sharedViewModel._beerList.value = BeerList()
+                viewModel.getStatistics(::statisticsCallback)
+            } else {
+                sharedViewModel._beerList.value?.list?.clear()
+                viewModel.getStatistics(::statisticsCallback)
+            }
         }
     }
 
-    override fun onDestroyView() {
-        removeBeerElements()
 
-        super.onDestroyView()
+    private fun showStatistics() {
+        for (i in 0 until sharedViewModel.beerList().value?.list!!.size) {
+            if(this.isVisible) {
+                val beerFragment = BeerElementFragment()
+
+                val args = Bundle()
+                args.putString("userLogin", sharedViewModel.userLogin)
+                args.putString(
+                    "beer",
+                    sharedViewModel.beerList().value?.list!![i].toJson().toString()
+                )
+                args.putBoolean("isThisBeerList", false)
+                beerFragment.arguments = args;
+                val transaction: FragmentTransaction = childFragmentManager.beginTransaction()
+                transaction.add(R.id.lastreviewed, beerFragment).commit()
+            }
+        }
     }
+
 
     companion object {
 

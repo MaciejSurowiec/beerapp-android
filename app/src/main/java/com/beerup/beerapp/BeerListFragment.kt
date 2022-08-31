@@ -1,17 +1,21 @@
 package com.beerup.beerapp
 
 import android.os.Bundle
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ProgressBar
+import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.*
-import org.json.JSONObject
-import java.util.*
+import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ViewModelProvider
+import com.beerup.beerapp.ViewModels.SharedViewModel
+import kotlinx.coroutines.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -19,303 +23,195 @@ import java.util.*
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [BeerListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+
 class BeerListFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-    private var userLogin: String? = null
-    private var thisView: View? = null
-    private var spinner: ProgressBar? = null
-    private var search: SearchView? = null
-    private var loading: Boolean = false
-    public var actualStart:Int = 0
-    private var query: String = ""
-    var scroll: BetterScrollView? = null
-    private val client = OkHttpClient()
-    var showed: Boolean = false
-    public var beerList = ArrayList<BeerElementView>()
-    var dontResetsearch = true
-    public var endOfDataShowed = false
+    private lateinit var spinner: ProgressBar
+    private lateinit var search: SearchView
+    lateinit var scroll: BetterScrollView
+    lateinit var retryButton: Button
+
+    private lateinit var viewModel: BeerListViewModel
+    private lateinit var sharedViewModel: SharedViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            userLogin = it.getString("userLogin")
-            param2 = it.getString(ARG_PARAM2)
-        }
 
-        CoroutineScope(Dispatchers.IO).launch {
-            downloadList()
-        }
+        viewModel = ViewModelProvider(this).get(BeerListViewModel::class.java)
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
+        viewModel.spinnerOff = ::spinnerOff
+        viewModel.spinnerOn = ::spinnerOn
+
+        viewModel.baseUrl = activity?.getString(R.string.baseUrl).toString()
+        viewModel.userLogin = sharedViewModel.userLogin
+        viewModel.showList = ::showList
+        viewModel.retryButton  = ::retryButton
+        viewModel.enableUI = ::enableUI
+        viewModel.disableUI = ::disableUI
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        (activity as AppCompatActivity)?.getSupportActionBar()?.hide()
-        (activity as MainActivity)?.bottomNavigation?.visibility = View.VISIBLE
-        thisView = inflater.inflate(R.layout.fragment_beer_list, container, false)
-        val mainActivity = activity as MainActivity
-        mainActivity.enableBackPress = true
-        return thisView
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        (activity as MainActivity).bottomNavigation?.visibility = View.VISIBLE
+        sharedViewModel.enableBackPress = false
+        sharedViewModel.backButtonEnd = true
+        return inflater.inflate(R.layout.fragment_beer_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val main = activity as MainActivity
-        main.backButtonEnd = false
-        if(main.beerid != "") {
-            for (i in 0 until beerList.size) {
-                if(beerList.get(i).id.equals(main.beerid)) {
-                    if(main.rating != 0.0f) {
-                        beerList.get(i).updateRate(main.rating)
-                        main.rating = 0.0f
-                    }
+        sharedViewModel.backButtonEnd = false
+        retryButton = view.findViewById(R.id.downloadlist)
+        spinner = view.findViewById(R.id.progressBar)
+        scroll = view.findViewById(R.id.scrollable)
+        scroll.viewModel = viewModel
+        search = view.findViewById(R.id.searchbar)
 
-                    if(main.list != null) {
-                        beerList.get(i).tags = main.list
-                        main.list = null
+        disableUI()
+        search.setOnQueryTextListener(
+            DebouncingQueryTextListener(
+                this@BeerListFragment.lifecycle
+            ) { newText ->
+                newText?.let {
+                   // if (!viewModel.loading) { // without this bool, resetsearch is activated on createview xd
+                    if (it.isEmpty()) {
+                        if(viewModel.query.isNotEmpty()) {
+                            clearBeerList()
+                            viewModel.resetSearch()
+                        }
+                    } else {
+                        clearBeerList()
+                        viewModel.search(it)
                     }
-
-                    main.beerid = ""
-                    break
                 }
             }
-        }
+        )
 
-        spinner = thisView?.findViewById(R.id.progressBar)
-        spinner!!.visibility = View.VISIBLE
-        scroll = thisView?.findViewById(R.id.scrollable)
-        scroll!!.beerList = this
-        search = thisView?.findViewById(R.id.searchbar)
-        dontResetsearch = true
-        if(beerList.size > 0) {
+        if(childFragmentManager.fragments.size == 0) {
+            viewModel.downloadList()
+        } else {
+            enableUI()
+            clearBeerList()
             showList()
         }
-        searchEngine()
-    }
 
-    fun reload() {
-        spinner!!.visibility = View.VISIBLE
-        CoroutineScope(Dispatchers.IO).launch {
-            downloadList()
-            withContext(Dispatchers.Main) {
-                showList(actualStart)
+        retryButton.setOnClickListener {
+            spinner.visibility = View.VISIBLE
+            retryButton.visibility = View.GONE
+            search.visibility = View.VISIBLE
+            viewModel.downloadList()
+            disableUI()
+        }
+    }
+    private fun enableSearchView(view: View, enabled: Boolean) {
+        // kurwa ten android to jest miejscami jakas komedia xd
+        view.isEnabled = enabled
+        if (view is ViewGroup) {
+            val viewGroup = view
+            for (i in 0 until viewGroup.childCount) {
+                val child = viewGroup.getChildAt(i)
+                enableSearchView(child, enabled)
             }
         }
     }
 
-    private fun fixUrl(str: String):String {
-        var output = str.replace("%","%25")
-            .replace(" ","%20")
-            .replace("+","%2B")
-            .replace("/","%2F")
-            .replace("\\","%5C")
-            .replace("$","%24")
-            .replace("!","%21")
-            .replace("?","%3F")
-            .replace("#","%23")
-            .replace("&","%26")
-            .replace("=","%3D")
-            .replace("(","%28")
-            .replace(")","%29")
-            .replace("-","%2D")
-            .replace("\'","dd")
-            .replace("\"'","")
-            .replace("@","%40")
-            .replace("^","%5E")
-            .replace("*","%2A")
-            .replace("(","%28")
-            .replace(")","%29")
-            .replace("{","%7B")
-            .replace("}","%7D")
-            .replace("[","%5B")
-            .replace("]","%5D")
-            .replace("|","%7C")
-            .replace("<","%3C")
-            .replace(">","%3E")
-            .replace(",","%2C")
-            .replace(".","%2E")
-            .replace(":","%3A")
-            .replace("_","%5F")
-            .replace(";","%3B")
-            .replace("`","%60")
-            .replace("~","%7E")
-            .replace("[^A-Z%a-z0-9 ]","")
-
-        return output
+    fun retryButton() {
+        search.visibility = View.GONE
+        retryButton.visibility = View.VISIBLE
     }
 
 
-    fun searchEngine() {
-        search?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextChange(newText: String): Boolean {
-                if(!dontResetsearch) {
-                    endOfDataShowed = false
-                    actualStart = 0
-                    beerList.clear()
-                    query = fixUrl(newText)
-                    spinner?.visibility = View.VISIBLE
-                    if(!loading) {
-                        loading = true
-                        CoroutineScope(Dispatchers.IO).launch {
-                            withContext(Dispatchers.Main) {
-                                removeBeerElements()
-                                activity?.findViewById<LinearLayout>(R.id.beerlist_layout)?.removeAllViews()
-                                beerList.clear()
-                            }
-                            downloadList()
-                            withContext(Dispatchers.Main) {
-                                showList()
-                            }
-                        }
-                    }
-                } else {
-                    dontResetsearch = false
-                }
-
-                return false
-            }
-
-            override fun onQueryTextSubmit(querys: String): Boolean {
-                actualStart = 0
-                query = fixUrl(querys)
-                spinner?.visibility = View.VISIBLE
-                if(!loading) {
-                    loading = true
-                    endOfDataShowed = false
-                    CoroutineScope(Dispatchers.IO).launch {
-                        withContext(Dispatchers.Main) {
-                            removeBeerElements()
-                            activity?.findViewById<LinearLayout>(R.id.beerlist_layout)?.removeAllViews()
-                            beerList.clear()
-                        }
-                        downloadList()
-                        withContext(Dispatchers.Main) {
-                            showList()
-                        }
-                    }
-                }
-                return false
-            }
-        })
-    }
-
-    suspend fun downloadList(){
-        val url = "${activity?.getString(R.string.baseUrl)}/beers?limit=10&queryPhrase=${query}&start=${actualStart}&login=${userLogin}"
-        var serverError = false
-
-        var json: JSONObject? = null
-        try {
-            var request = Request.Builder().url(url).build()
-            var response = client.newCall(request).execute()
-            json = JSONObject(response.body()?.string())
-        } catch (e: java.lang.Exception) {
-            serverError = true
+    fun clearBeerList() {
+        childFragmentManager.fragments.forEach {
+            childFragmentManager.beginTransaction().remove(it).commit()
         }
+    }
 
-        if(!serverError) {
-            val data = json?.getJSONArray("content")
+    fun spinnerOn() {
+        spinner.visibility = View.VISIBLE
+    }
+
+    fun spinnerOff() {
+        spinner.visibility = View.GONE
+    }
+
+    fun disableUI() {
+        enableSearchView(search, false)
+    }
+
+    fun enableUI() {
+        enableSearchView(search, true)
+    }
+
+    fun showList() {
+        val start = 0
+        retryButton.visibility = View.GONE
+        for (i in start until viewModel.beerList().value?.list?.size!!) {
             if(this.isVisible) {
-                withContext(Dispatchers.Main) {
-                    search?.isEnabled = true
-                }
+                val beerFragment = BeerElementFragment()
+
+                val args = Bundle()
+                args.putString("userLogin", sharedViewModel.userLogin)
+                args.putString(
+                    "beer",
+                    viewModel.beerList().value?.list!![i].toJson().toString()
+                )
+                args.putBoolean("isThisBeerList", true)
+                beerFragment.arguments = args;
+                val transaction: FragmentTransaction = childFragmentManager.beginTransaction()
+                transaction.add(R.id.beerlist_layout, beerFragment).commit()
             }
-            if (data?.length() == 0) {
-                if (!endOfDataShowed && beerList.size == 0) {
-                    if(this.isVisible) {
-                        withContext(Dispatchers.Main) {
-                            val view = BeerElementView(
-                                layoutInflater, JSONObject(),
-                                userLogin!!, spinner!!, requireActivity().baseContext,
-                                this@BeerListFragment, true
-                            )
-                            beerList?.add(view)
-                        }
-                    }
-                }
-                endOfDataShowed = true
-            } else {
-                for (i in 0 until data!!.length()) {
-                    if(this.isVisible) {
-                        val beer = data?.getJSONObject(i)
-                        val view = BeerElementView(
-                            layoutInflater, beer,
-                            userLogin!!, spinner!!,
-                            requireActivity().baseContext, this@BeerListFragment
-                        )
-                        beerList?.add(view)
-                    }
-                }
-            }
-            if (!showed) {
-                withContext(Dispatchers.Main) {
-                    showList()
-                }
-            }
-        } else {
+        }
+
+        if(viewModel.endOfDataShowed) {
             if(this.isVisible) {
-                withContext(Dispatchers.Main) {
-                    var button = thisView?.findViewById<Button>(R.id.downloadlist)
-                    button?.visibility = View.VISIBLE
-                    search?.visibility = View.GONE
-                    spinner?.visibility = View.GONE
-                    button?.setOnClickListener {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            downloadList()
-                        }
-                        button?.visibility = View.GONE
-                        search?.visibility = View.VISIBLE
-                        search?.isEnabled = false
-                        spinner?.visibility = View.VISIBLE
-                        showed = false
-                    }
+                val beerFragment = BeerElementFragment()
+                //empty arguments cause this is just text that there is no more data
+                val transaction: FragmentTransaction = childFragmentManager.beginTransaction()
+                transaction.add(R.id.beerlist_layout, beerFragment).commit()
+            }
+        }
+
+        spinner.visibility = View.GONE
+    }
+
+    internal class DebouncingQueryTextListener(
+        lifecycle: Lifecycle,
+        private val onDebouncingQueryTextChange: (String?) -> Unit
+    ) : SearchView.OnQueryTextListener, LifecycleObserver {
+        var debouncePeriod: Long = 500
+
+        private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+
+        private var searchJob: Job? = null
+
+        init {
+            lifecycle.addObserver(this)
+        }
+
+        override fun onQueryTextSubmit(query: String?): Boolean {
+            return false
+        }
+
+        override fun onQueryTextChange(newText: String?): Boolean {
+            searchJob?.cancel()
+            searchJob = coroutineScope.launch {
+                newText?.let {
+                    delay(debouncePeriod)
+                    onDebouncingQueryTextChange(newText)
                 }
             }
+            return false
         }
-    }
 
-    fun removeBeerElements() {
-        val mainLayout = thisView?.findViewById<LinearLayout>(R.id.beerlist_layout)
-
-        for (i in 0 until beerList.size) {
-            mainLayout?.removeView(beerList.get(i).mView)
-        }
-    }
-
-
-    override fun onDestroyView() {
-        removeBeerElements()
-
-        super.onDestroyView()
-    }
-
-    fun showList(start: Int = 0) {
-        val mainLayout = thisView?.findViewById<LinearLayout>(R.id.beerlist_layout)
-
-        for (i in start until beerList.size) {
-            if(this.isVisible) {
-                mainLayout?.addView(beerList.get(i).mView)
-                beerList.get(i).setImage()
-            }
-        }
-        if(this.isVisible) {
-            showed = true
-
-            spinner!!.visibility = View.GONE
-            if (scroll!!.loading) {
-                scroll!!.loading = false
-            }
-
-            if (loading) {
-                loading = false
-            }
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        private fun destroy() {
+            searchJob?.cancel()
         }
     }
 

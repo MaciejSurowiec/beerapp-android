@@ -6,14 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.beerup.beerapp.MainActivity
+import com.beerup.beerapp.ViewModels.SharedViewModel
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
+
 class AboutFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+
+    private lateinit var sharedViewModel: SharedViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,27 +26,32 @@ class AboutFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedViewModel::class.java)
+        sharedViewModel.enableBackPress = false
+        sharedViewModel.backButtonEnd = true
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        (activity as AppCompatActivity)?.getSupportActionBar()?.hide()
-        if((activity as MainActivity)?.userLogin != "") {
-            (activity as MainActivity)?.bottomNavigation?.visibility = View.VISIBLE
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        if(sharedViewModel.userLogin != "") {
+            (activity as MainActivity).bottomNavigation?.visibility = View.VISIBLE
         } else {
-            (activity as MainActivity)?.bottomNavigation?.visibility = View.GONE
+            (activity as MainActivity).bottomNavigation?.visibility = View.GONE
         }
         return inflater.inflate(R.layout.fragment_about, container, false)
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val mainActivity = activity as MainActivity
-        mainActivity.enableBackPress = true
-        mainActivity.backButtonEnd = false
     }
+
 
     companion object {
 

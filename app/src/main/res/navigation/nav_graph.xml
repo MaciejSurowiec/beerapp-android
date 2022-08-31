@@ -49,9 +49,6 @@
         <argument
             android:name="userLogin"
             app:argType="string" />
-        <argument
-            android:name="StatJson"
-            app:argType="string" />
         <action
             android:id="@+id/action_loggedFragment_to_unloggedFragment"
             app:destination="@id/unloggedFragment" />
