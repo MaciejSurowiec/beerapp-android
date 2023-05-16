@@ -28,9 +28,9 @@ Unfortunately for now the backend is turned off, so nothing will work in the app
 
 interface examples:
 
-<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface1.JPG" width=236 height=510>
-<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface2.JPG" width=236 height=510>
-<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface3.JPG" width=236 height=510>
+<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface1.jpg" width=236 height=510>
+<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface2.jpg" width=236 height=510>
+<img src="https://raw.github.com/MaciejSurowiec/beerapp-android/main/examples/interface3.jpg" width=236 height=510>
 
 
 ## License
